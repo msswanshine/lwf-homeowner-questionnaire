@@ -152,7 +152,7 @@ export function PlantResultsView() {
           </ul>
         </div>
         <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-          <p className="text-sm font-medium text-[var(--foreground)]">
+          <p className="text-sm font-medium text-[var(--foreground)] my-5">
             {status === "ready"
               ? `${sortedPlants.length} plants recommended for your property`
               : status === "loading"
@@ -161,7 +161,7 @@ export function PlantResultsView() {
                   ? "We could not load recommendations."
                   : "Preparing recommendations…"}
           </p>
-          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-end">
+          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end justify-start">
             <label className="flex flex-col text-xs font-semibold uppercase tracking-wide text-[var(--muted)] sm:min-w-[11rem]">
               Sort by
               <select

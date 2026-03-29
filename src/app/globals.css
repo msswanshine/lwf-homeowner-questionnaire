@@ -151,8 +151,13 @@ body {
   }
 }
 
-/* Results toolbar selects: chevron on the right (native arrow hidden via appearance-none). */
-.results-select-chevron {
+/*
+ * Results /results toolbar selects: custom chevron (do not combine with Tailwind `appearance-none`,
+ * which can strip background-image in the cascade).
+ */
+select.results-select-chevron {
+  -webkit-appearance: none;
+  -moz-appearance: none;
   appearance: none;
   padding-right: 2.35rem;
   background-color: var(--surface);
@@ -162,7 +167,7 @@ body {
   background-size: 1rem 1rem;
 }
 
-.results-select-chevron:disabled {
+select.results-select-chevron:disabled {
   opacity: 0.7;
 }
 
