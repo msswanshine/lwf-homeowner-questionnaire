@@ -209,7 +209,7 @@ function Summary({ answers }: { answers: QuestionnaireAnswers }) {
       value: answers.maintenanceTime ? MAINT_TIME_LABEL[answers.maintenanceTime] : "—",
     },
     {
-      label: "Hard on your body?",
+      label: "Physical limitations",
       value: answers.physicalAbility ? PHYSICAL_LABEL[answers.physicalAbility] : "—",
     },
     {
