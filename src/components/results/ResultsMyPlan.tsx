@@ -94,16 +94,25 @@ export function ResultsMyPlan({ scoredPlants }: { scoredPlants: ScoredPlant[] })
       >
         <div className="flex h-full max-h-[100dvh] flex-col bg-[var(--surface)] shadow-2xl">
           <div className="flex shrink-0 items-center justify-between gap-3 border-b border-black/10 px-4 py-3 sm:px-6">
-            <h2 id={titleId} className="text-lg font-semibold text-[var(--foreground)] sm:text-xl">
+            <h2 id={titleId} className="min-w-0 text-lg font-semibold text-[var(--foreground)] sm:text-xl">
               My Plan
             </h2>
-            <button
-              type="button"
-              className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-full border border-black/15 bg-white px-5 text-sm font-semibold text-[var(--foreground)] shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent-strong)]"
-              onClick={closeDialog}
-            >
-              Close
-            </button>
+            <div className="flex shrink-0 flex-wrap items-center justify-end gap-2 sm:gap-3">
+              <button
+                type="button"
+                className="inline-flex min-h-11 min-w-[10rem] items-center justify-center rounded-full border border-black/15 bg-white px-4 text-sm font-semibold text-[var(--foreground)] shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent-strong)] sm:min-w-44 sm:px-6"
+                onClick={() => window.print()}
+              >
+                Print / save as PDF
+              </button>
+              <button
+                type="button"
+                className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-full border border-black/15 bg-white px-5 text-sm font-semibold text-[var(--foreground)] shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent-strong)]"
+                onClick={closeDialog}
+              >
+                Close
+              </button>
+            </div>
           </div>
           <div className="min-h-0 flex-1 overflow-y-auto px-4 py-6 sm:px-6">
             {myListIds.length === 0 ? (
