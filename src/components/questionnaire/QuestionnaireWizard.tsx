@@ -46,9 +46,9 @@ const PROPERTY_SIZE_LABEL: Record<PropertySize, string> = {
 };
 
 const ZONE_LABEL: Record<DefensibleZoneId, string> = {
-  zone0: "Zone 0 (0–5 ft)",
-  zone1: "Zone 1 (5–30 ft)",
-  zone2: "Zone 2 (30–100 ft)",
+  zone1: "Zone 1 (0–5 ft)",
+  zone2: "Zone 2 (5–30 ft)",
+  zone3: "Zone 3 (30–100 ft)",
 };
 
 const IRRIGATION_LABEL: Record<Irrigation, string> = {

@@ -126,23 +126,23 @@ function fireLabelFromScores(scores: number[]): FireResistanceLabel {
 function inferZonesFromHiz(hizLabels: string[]): DefensibleZoneId[] {
   const joined = hizLabels.join(" ").toLowerCase();
   const zones = new Set<DefensibleZoneId>();
-  if (joined.includes("0-5") || joined.includes("0–5")) zones.add("zone0");
+  if (joined.includes("0-5") || joined.includes("0–5")) zones.add("zone1");
   if (
     joined.includes("5-30") ||
     joined.includes("10-30") ||
     joined.includes("5–30") ||
     joined.includes("10–30")
   )
-    zones.add("zone1");
+    zones.add("zone2");
   if (
     joined.includes("30-100") ||
     joined.includes("50-100") ||
     joined.includes("30–100") ||
     joined.includes("50–100")
   )
-    zones.add("zone2");
+    zones.add("zone3");
   const short = hizLabels.some((h) => h.includes("<2") || h.includes("2 ft"));
-  if (short) zones.add("zone0");
+  if (short) zones.add("zone1");
   return [...zones];
 }
 
@@ -155,7 +155,7 @@ function plantMatchesDefensibleZones(
   const inferred = inferZonesFromHiz(hiz);
   const short = valuesFor(plant, ATTR.shortHeight).some((s) => s === "true");
   if (inferred.length === 0) {
-    return selected.includes("zone1") || (selected.includes("zone0") && short);
+    return selected.includes("zone2") || (selected.includes("zone1") && short);
   }
   return selected.some((z) => inferred.includes(z));
 }
@@ -456,7 +456,7 @@ export function filterAndScorePlants(
         ? inferZonesFromHiz(valuesFor(plant, ATTR.hiz))
         : answers.defensibleZones.length
           ? answers.defensibleZones
-          : (["zone1"] as DefensibleZoneId[]);
+          : (["zone2"] as DefensibleZoneId[]);
     const waterUseLabel = valuesFor(plant, ATTR.waterAmount)[0] ?? null;
     const maintenanceLabel = numericCharacterScore(plant)?.toString() ?? null;
     const maintNum = numericCharacterScore(plant);
@@ -655,12 +655,12 @@ export function sortScoredPlants(
  */
 export function groupPlantsByZone(plants: ScoredPlant[]): Record<DefensibleZoneId, ScoredPlant[]> {
   const groups: Record<DefensibleZoneId, ScoredPlant[]> = {
-    zone0: [],
     zone1: [],
     zone2: [],
+    zone3: [],
   };
   for (const p of plants) {
-    const zones = p.recommendedZones.length ? p.recommendedZones : (["zone1"] as DefensibleZoneId[]);
+    const zones = p.recommendedZones.length ? p.recommendedZones : (["zone2"] as DefensibleZoneId[]);
     for (const z of zones) {
       groups[z].push(p);
     }

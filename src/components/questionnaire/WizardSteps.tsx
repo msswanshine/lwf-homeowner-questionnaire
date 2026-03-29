@@ -245,8 +245,8 @@ export function renderQuestionnaireStep(
           <section className="space-y-3">
             <h2 className="text-lg font-semibold text-[var(--foreground)]">Defensible space zones</h2>
             <p className="text-sm text-[var(--muted)]">
-              Zone 0 hugs the home, Zone 1 is the lean, clean, green ring, and Zone 2 extends farther out.
-              Select every zone you are actively planning—this is the “room around the house” from a fire
+              Zone 1 is closest to the home, Zone 2 is the lean, clean, green ring, and Zone 3 extends farther
+              out. Select every zone you are actively planning—this is the “room around the house” from a fire
               perspective.{" "}
               <a
                 href="https://wfca.com/wildfire-articles/firewise-defensible-space/"
@@ -261,18 +261,18 @@ export function renderQuestionnaireStep(
               {(
                 [
                   {
-                    id: "zone0" as const,
-                    title: "Zone 0 (0–5 ft)",
+                    id: "zone1" as const,
+                    title: "Zone 1 (0–5 ft)",
                     hint: "Immediate home perimeter—emphasize non-combustible surfaces and ground-hugging plants.",
                   },
                   {
-                    id: "zone1" as const,
-                    title: "Zone 1 (5–30 ft)",
+                    id: "zone2" as const,
+                    title: "Zone 2 (5–30 ft)",
                     hint: "Well-spaced, irrigated plantings; watch ladder fuels.",
                   },
                   {
-                    id: "zone2" as const,
-                    title: "Zone 2 (30–100 ft)",
+                    id: "zone3" as const,
+                    title: "Zone 3 (30–100 ft)",
                     hint: "Broader landscape—fuel breaks and lower-density plantings.",
                   },
                 ] satisfies { id: DefensibleZoneId; title: string; hint: string }[]

@@ -1,7 +1,34 @@
 import type {
+  DefensibleZoneId,
   QuestionnaireAnswers,
   TopPriority,
 } from "@/types";
+
+const LEGACY_DEFENSIBLE_ZONE: Record<string, DefensibleZoneId | undefined> = {
+  zone0: "zone1",
+  zone1: "zone2",
+  zone2: "zone3",
+};
+
+function isDefensibleZoneId(v: string): v is DefensibleZoneId {
+  return v === "zone1" || v === "zone2" || v === "zone3";
+}
+
+/** Maps legacy zone0–2 saves to zone1–3; dedupes. */
+export function migrateDefensibleZoneIds(zones: unknown): DefensibleZoneId[] {
+  if (!Array.isArray(zones)) return [];
+  const out: DefensibleZoneId[] = [];
+  for (const item of zones) {
+    if (typeof item !== "string") continue;
+    if (isDefensibleZoneId(item)) {
+      out.push(item);
+      continue;
+    }
+    const mapped = LEGACY_DEFENSIBLE_ZONE[item];
+    if (mapped) out.push(mapped);
+  }
+  return [...new Set(out)];
+}
 
 /** Fresh wizard state for a new session. */
 export function createEmptyAnswers(): QuestionnaireAnswers {
@@ -73,7 +100,9 @@ export function normalizeQuestionnaireAnswers(raw: unknown): QuestionnaireAnswer
     ...p,
     ashlandAreaResident,
     addressZip: typeof p.addressZip === "string" ? p.addressZip : base.addressZip,
-    defensibleZones: Array.isArray(p.defensibleZones) ? p.defensibleZones : base.defensibleZones,
+    defensibleZones: migrateDefensibleZoneIds(
+      Array.isArray(p.defensibleZones) ? p.defensibleZones : base.defensibleZones,
+    ),
     lightPreferences: Array.isArray(p.lightPreferences) ? p.lightPreferences : base.lightPreferences,
     sourcing: Array.isArray(p.sourcing) ? p.sourcing : base.sourcing,
     aesthetics: Array.isArray(p.aesthetics) ? p.aesthetics : base.aesthetics,

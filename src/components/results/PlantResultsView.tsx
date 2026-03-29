@@ -21,16 +21,16 @@ import { PlantCard } from "./PlantCard";
 import { PlantResultsPrintTables } from "./PlantResultsPrintTables";
 import { ResultsMyPlan } from "./ResultsMyPlan";
 
-const ZONE_LABEL: Record<string, string> = {
-  zone0: "Zone 0 — 0 to 5 ft",
-  zone1: "Zone 1 — 5 to 30 ft",
-  zone2: "Zone 2 — 30 to 100 ft",
+const ZONE_LABEL: Record<DefensibleZoneId, string> = {
+  zone1: "Zone 1 — 0 to 5 ft",
+  zone2: "Zone 2 — 5 to 30 ft",
+  zone3: "Zone 3 — 30 to 100 ft",
 };
 
 const INITIAL_ZONE_EXPANDED: Record<DefensibleZoneId, boolean> = {
-  zone0: false,
   zone1: false,
   zone2: false,
+  zone3: false,
 };
 
 export function PlantResultsView() {
@@ -255,7 +255,7 @@ export function PlantResultsView() {
       {status === "ready" ? (
         <>
           <div className="space-y-8 print:hidden">
-            {(["zone0", "zone1", "zone2"] as const).map((zone) => {
+            {(["zone1", "zone2", "zone3"] as const).map((zone) => {
               const list = grouped[zone];
               if (!list.length) return null;
               return (

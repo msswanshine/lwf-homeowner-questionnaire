@@ -7,7 +7,8 @@ export type PropertySize = "small" | "medium" | "large" | "veryLarge";
 
 export type UsdaZone = "5" | "6" | "7" | "8" | "9";
 
-export type DefensibleZoneId = "zone0" | "zone1" | "zone2";
+/** Firewise-style numbering: Zone 1 = immediate (≈0–5 ft), 2 = intermediate (≈5–30 ft), 3 = extended (≈30–100 ft). */
+export type DefensibleZoneId = "zone1" | "zone2" | "zone3";
 
 export type Irrigation = "none" | "drip" | "sprinkler" | "greywater";
 

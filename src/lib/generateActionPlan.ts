@@ -20,27 +20,27 @@ function budgetNarrative(answers: QuestionnaireAnswers): string {
   switch (answers.budget) {
     case "under500":
       detail =
-        "Phase 2 focuses on smaller containers and fast-impact swaps that fit a tight budget.";
+        "Phase 3 focuses on smaller containers and fast-impact swaps that fit a tight budget.";
       break;
     case "500_1000":
     case "1000_2500":
       detail =
-        "Phase 2 sequences medium-sized purchases with a few anchor shrubs first.";
+        "Phase 3 sequences medium-sized purchases with a few anchor shrubs first.";
       break;
     case "2500_5000":
     case "5000plus":
       detail =
-        "Phase 2 can include larger specimens; still stage work outward from the home.";
+        "Phase 3 can include larger specimens; still stage work outward from the home.";
       break;
     default:
       detail =
-        "Phase 2 sequences plantings from the home outward, pacing purchases to your budget.";
+        "Phase 3 sequences plantings from the home outward, pacing purchases to your budget.";
   }
   return `${cadence} ${detail}`;
 }
 
 /**
- * Produces default phases for the accordion UI (Phase 0–4).
+ * Produces default phases for the accordion UI (Phase 1–5).
  */
 export function generateActionPlan(
   answers: QuestionnaireAnswers,
@@ -67,8 +67,8 @@ export function generateActionPlan(
       : null;
 
   phases.push({
-    id: "phase-0",
-    title: "Phase 0 — Remove hazards",
+    id: "phase-1",
+    title: "Phase 1 — Remove hazards",
     body:
       answers.removePlants || debrisTask
         ? "Handle removals and urgent housekeeping before adding new plants."
@@ -78,15 +78,15 @@ export function generateActionPlan(
       ...(debrisTask ? [debrisTask] : []),
       {
         id: "p0-walkthrough",
-        label: "Walk Zone 0–1 and remove dead branches, leaves on roofs, and clutter against siding.",
+        label: "Walk Zones 1–2 and remove dead branches, leaves on roofs, and clutter against siding.",
       },
     ],
   });
 
-  const zone0Plants = plants.filter((p) => p.recommendedZones.includes("zone0"));
+  const zone1ImmediatePlants = plants.filter((p) => p.recommendedZones.includes("zone1"));
   phases.push({
-    id: "phase-1",
-    title: "Phase 1 — Zone 0 (0–5 ft)",
+    id: "phase-2",
+    title: "Phase 2 — Zone 1 (0–5 ft)",
     body: "Keep the immediate perimeter lean, hydrated, and low—favor ground-hugging choices from your list.",
     tasks: [
       {
@@ -94,30 +94,30 @@ export function generateActionPlan(
         label:
           "Add or maintain non-combustible breaks (gravel, stone, pavers) where plants touch foundations.",
       },
-      ...zone0Plants.slice(0, 6).map((p) => ({
+      ...zone1ImmediatePlants.slice(0, 6).map((p) => ({
         id: `p1-${p.id}`,
         label: `Plant / refresh: ${p.commonName} (${p.fireResistance} fire resistance)`,
       })),
     ],
   });
 
-  const zone1Plants = plants.filter((p) => p.recommendedZones.includes("zone1"));
+  const zone2IntermediatePlants = plants.filter((p) => p.recommendedZones.includes("zone2"));
   phases.push({
-    id: "phase-2",
-    title: "Phase 2 — Zone 1 (5–30 ft)",
+    id: "phase-3",
+    title: "Phase 3 — Zone 2 (5–30 ft)",
     body: budgetNarrative(answers),
-    tasks: zone1Plants.slice(0, 10).map((p) => ({
+    tasks: zone2IntermediatePlants.slice(0, 10).map((p) => ({
       id: `p2-${p.id}`,
       label: `Install ${p.commonName} — keep spacing per mature width; mulch with non-combustible options near structures.`,
     })),
   });
 
-  const zone2Plants = plants.filter((p) => p.recommendedZones.includes("zone2"));
+  const zone3ExtendedPlants = plants.filter((p) => p.recommendedZones.includes("zone3"));
   phases.push({
-    id: "phase-3",
-    title: "Phase 3 — Zone 2 (30–100 ft)",
+    id: "phase-4",
+    title: "Phase 4 — Zone 3 (30–100 ft)",
     body: "Longer-term canopy and structural plants—pace irrigation work with the season.",
-    tasks: zone2Plants.slice(0, 8).map((p) => ({
+    tasks: zone3ExtendedPlants.slice(0, 8).map((p) => ({
       id: `p3-${p.id}`,
       label: `Plan ${p.commonName} for mid-field placement with defensible spacing.`,
     })),
@@ -129,8 +129,8 @@ export function generateActionPlan(
       : "";
 
   phases.push({
-    id: "phase-4",
-    title: "Phase 4 — Ongoing maintenance",
+    id: "phase-5",
+    title: "Phase 5 — Ongoing maintenance",
     body: `Keep fuels broken up, irrigation predictable, and revisit the plan each spring.${priorityLine ? ` ${priorityLine}` : ""}`,
     tasks: [
       {

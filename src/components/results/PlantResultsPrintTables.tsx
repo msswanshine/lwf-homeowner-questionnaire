@@ -2,9 +2,9 @@ import { groupPlantsByZone } from "@/lib/filterPlants";
 import type { DefensibleZoneId, ScoredPlant } from "@/types";
 
 const ZONE_LABEL: Record<DefensibleZoneId, string> = {
-  zone0: "Zone 0 — 0 to 5 ft",
-  zone1: "Zone 1 — 5 to 30 ft",
-  zone2: "Zone 2 — 30 to 100 ft",
+  zone1: "Zone 1 — 0 to 5 ft",
+  zone2: "Zone 2 — 5 to 30 ft",
+  zone3: "Zone 3 — 30 to 100 ft",
 };
 
 function scientificLine(plant: ScoredPlant): string {
@@ -59,7 +59,7 @@ export function PlantResultsPrintTables({
           </p>
         ) : null}
       </div>
-      {(["zone0", "zone1", "zone2"] as const).map((zone) => {
+      {(["zone1", "zone2", "zone3"] as const).map((zone) => {
         const list = groupedForPrint[zone];
         if (!list.length) return null;
         return (

@@ -3,7 +3,7 @@
  */
 
 import type { QuestionnaireAnswers, ScoredPlant } from "@/types";
-import { normalizeQuestionnaireAnswers } from "@/lib/questionnaireState";
+import { migrateDefensibleZoneIds, normalizeQuestionnaireAnswers } from "@/lib/questionnaireState";
 
 /** Dispatched on `window` after the saved plant list changes (same tab). */
 export const FW_MY_LIST_CHANGED_EVENT = "fw-planner-my-list-changed";
@@ -49,7 +49,12 @@ export function clearQuestionnaireAnswers() {
 
 export function loadCachedResults(): ScoredPlant[] | null {
   if (typeof window === "undefined") return null;
-  return readJson<ScoredPlant[]>(window.localStorage.getItem(KEYS.results));
+  const parsed = readJson<ScoredPlant[]>(window.localStorage.getItem(KEYS.results));
+  if (!parsed) return null;
+  return parsed.map((p) => ({
+    ...p,
+    recommendedZones: migrateDefensibleZoneIds(p.recommendedZones),
+  }));
 }
 
 export function saveCachedResults(plants: ScoredPlant[]) {
