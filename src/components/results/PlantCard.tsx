@@ -367,7 +367,7 @@ export const PlantCard = memo(function PlantCard({
           requestDialogClose();
         }}
       >
-        <div className="flex max-h-[min(85vh,640px)] flex-col overflow-hidden rounded-2xl border border-black/15 bg-[var(--surface)]">
+        <div className="flex max-h-[min(85vh,640px)] flex-col overflow-hidden rounded-2xl bg-[var(--surface)]">
           <div className="border-b border-black/10 px-4 py-3">
             <h2 id={dialogTitleId} className="text-base font-semibold">
               {plant.commonName}
