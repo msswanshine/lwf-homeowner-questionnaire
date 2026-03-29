@@ -10,12 +10,11 @@ export function validateQuestionnaireStep(
   const errors: StepErrors = {};
   switch (step) {
     case 0:
-      if (!answers.propertySize) errors.propertySize = "Choose a property size.";
+      if (!answers.propertySize) errors.propertySize = "Pick a yard size.";
       if (answers.ashlandAreaResident === null) {
-        errors.ashlandAreaResident =
-          "Say whether you live in the Ashland area (City of Ashland plant rules).";
+        errors.ashlandAreaResident = "Say if you live in Ashland or not.";
       }
-      if (!answers.usdaZone) errors.usdaZone = "Select or look up your USDA zone.";
+      if (!answers.usdaZone) errors.usdaZone = "Pick your cold-weather zone (or use ZIP to guess).";
       if (answers.defensibleZones.length === 0) {
         errors.defensibleZones =
           "Pick at least one defensible space zone you are planning for.";
@@ -29,21 +28,21 @@ export function validateQuestionnaireStep(
       break;
     case 2:
       if (answers.lightPreferences.length === 0) {
-        errors.lightPreferences = "Pick at least one sun/shade pattern.";
+        errors.lightPreferences = "Pick sunny, shady, or mixed—at least one.";
       }
       if (!answers.pollinatorImportance) {
-        errors.pollinatorImportance = "Select how much pollinator value matters.";
+        errors.pollinatorImportance = "Say if bees and butterflies matter to you.";
       }
       if (!answers.deerResistance) {
-        errors.deerResistance = "Select deer resistance importance.";
+        errors.deerResistance = "Say if deer are a problem in your yard.";
       }
       break;
     case 3:
       if (!answers.maintenanceTime) {
-        errors.maintenanceTime = "Estimate maintenance time.";
+        errors.maintenanceTime = "Guess how much time you’ll spend in the yard each month.";
       }
       if (!answers.physicalAbility) {
-        errors.physicalAbility = "Select accessibility preferences.";
+        errors.physicalAbility = "Say if ladders or lots of kneeling are hard for you.";
       }
       break;
     case 4:
@@ -52,32 +51,34 @@ export function validateQuestionnaireStep(
       }
       if (!answers.budget) errors.budget = "Select a budget range.";
       if (answers.sourcing.length === 0) {
-        errors.sourcing = "Pick at least one sourcing option.";
+        errors.sourcing = "Pick at least one place you might buy or get plants.";
       }
       break;
     case 5:
       if (answers.aesthetics.length === 0) {
-        errors.aesthetics = "Choose at least one aesthetic direction.";
+        errors.aesthetics = "Pick at least one style you like.";
       }
       if (answers.colors.length === 0) {
-        errors.colors = "Pick at least one color direction (or “No preference”).";
+        errors.colors = "Pick at least one color vibe (or “not picky”).";
       }
       if (answers.seasonal.length === 0) {
-        errors.seasonal = "Select at least one season of interest.";
+        errors.seasonal = "Pick at least one season you want the yard to shine.";
       }
       break;
     case 6:
       if (answers.keepExisting && !answers.keepExistingNotes.trim()) {
-        errors.keepExistingNotes = "Tell us what you are keeping, or turn this off.";
+        errors.keepExistingNotes =
+          "Write which plants you’re keeping, or turn off the “keep” switch.";
       }
       if (answers.removePlants && !answers.removePlantsNotes.trim()) {
-        errors.removePlantsNotes = "List what should be removed, or turn this off.";
+        errors.removePlantsNotes =
+          "Write what you’re removing, or turn off the “remove” switch.";
       }
       break;
     case 7:
       if (!answers.fireRisk) errors.fireRisk = "Select your perceived local risk.";
       if (answers.priorities.length === 0) {
-        errors.priorities = "Pick at least one priority.";
+        errors.priorities = "Pick at least one thing that matters most to you.";
       }
       break;
     default:
