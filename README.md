@@ -89,4 +89,4 @@ Future phases may include accounts, neighborhood tooling, satellite planning, an
 
 ## License
 
-Add an explicit license file that matches your organization’s policy (MIT, Apache-2.0, etc.). Until then, treat contributions as proprietary to the repository owner.
+[MIT](LICENSE) — see [`LICENSE`](LICENSE) for the full text.
