@@ -15,9 +15,12 @@ import { PlantApiError } from "@/lib/plantApi";
 /** Planner payload size matches `PLANNER_CATALOG_OPTIONS` in `app/api/planner-catalog/route.ts`. */
 const PLANNER_CATALOG_PATH = "/api/planner-catalog";
 
-async function fetchPlannerCatalogDetails(): Promise<PlantDetail[]> {
+async function fetchPlannerCatalogDetails(answers: QuestionnaireAnswers): Promise<PlantDetail[]> {
   const res = await fetch(PLANNER_CATALOG_PATH, {
+    method: "POST",
     credentials: "same-origin",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ answers }),
   });
   if (!res.ok) {
     let message = res.statusText;
@@ -39,7 +42,7 @@ async function fetchPlannerCatalogDetails(): Promise<PlantDetail[]> {
 export async function loadAndScorePlants(
   answers: QuestionnaireAnswers,
 ): Promise<ScoredPlant[]> {
-  const details = await fetchPlannerCatalogDetails();
+  const details = await fetchPlannerCatalogDetails(answers);
   return filterAndScorePlants(details, answers);
 }
 

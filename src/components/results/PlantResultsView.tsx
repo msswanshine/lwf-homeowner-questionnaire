@@ -165,7 +165,7 @@ export function PlantResultsView() {
             <label className="flex flex-col text-xs font-semibold uppercase tracking-wide text-[var(--muted)] sm:min-w-[11rem]">
               Sort by
               <select
-                className="mt-1 min-h-11 rounded-full border border-black/15 bg-white px-4 text-sm font-medium text-[var(--foreground)] shadow-sm"
+                className="results-select-chevron mt-1 min-h-11 rounded-full border border-black/15 pl-4 text-sm font-medium text-[var(--foreground)] shadow-sm"
                 value={sort}
                 onChange={(e) => setSort(e.target.value as PlantSortMode)}
                 disabled={status === "loading"}
@@ -182,7 +182,7 @@ export function PlantResultsView() {
             <label className="flex flex-col text-xs font-semibold uppercase tracking-wide text-[var(--muted)] sm:min-w-[12rem]">
               Mature height (catalog ft)
               <select
-                className="mt-1 min-h-11 rounded-full border border-black/15 bg-white px-4 text-sm font-medium text-[var(--foreground)] shadow-sm"
+                className="results-select-chevron mt-1 min-h-11 rounded-full border border-black/15 pl-4 text-sm font-medium text-[var(--foreground)] shadow-sm"
                 value={sizeOrdering.height}
                 onChange={(e) =>
                   setSizeOrdering((prev) => ({
@@ -200,7 +200,7 @@ export function PlantResultsView() {
             <label className="flex flex-col text-xs font-semibold uppercase tracking-wide text-[var(--muted)] sm:min-w-[12rem]">
               Mature width (catalog ft)
               <select
-                className="mt-1 min-h-11 rounded-full border border-black/15 bg-white px-4 text-sm font-medium text-[var(--foreground)] shadow-sm"
+                className="results-select-chevron mt-1 min-h-11 rounded-full border border-black/15 pl-4 text-sm font-medium text-[var(--foreground)] shadow-sm"
                 value={sizeOrdering.width}
                 onChange={(e) =>
                   setSizeOrdering((prev) => ({
@@ -218,8 +218,15 @@ export function PlantResultsView() {
           </div>
         </div>
         <p className="text-xs text-[var(--muted)] print:hidden">
-          With both height and width set, ordering uses height first, then width. &quot;Sort by&quot; breaks
-          any remaining ties.
+          For <span className="text-[var(--foreground)]">Fire performance</span>,{" "}
+          <span className="text-[var(--foreground)]">Water use</span>, and{" "}
+          <span className="text-[var(--foreground)]">Care score</span>, mature height/width (when set) order
+          the list first; that sort choice breaks ties. For{" "}
+          <span className="text-[var(--foreground)]">Alphabetical</span>,{" "}
+          <span className="text-[var(--foreground)]">Deer</span>,{" "}
+          <span className="text-[var(--foreground)]">Pollinator</span>, and{" "}
+          <span className="text-[var(--foreground)]">Bird</span>, the dropdown orders plants first; mature
+          size breaks ties after that.
         </p>
       </header>
 
@@ -260,15 +267,18 @@ export function PlantResultsView() {
               if (!list.length) return null;
               return (
                 <section key={zone} className="space-y-3">
-                  <div className="rounded-2xl border border-black/10 bg-[var(--surface)] p-4">
+                  <div className="rounded-2xl border border-black/10 bg-[var(--surface)] p-4 shadow-sm">
                     <button
                       type="button"
                       id={`results-zone-heading-${zone}`}
-                      aria-expanded={zoneExpanded[zone]}
+                      aria-expanded={Boolean(zoneExpanded[zone])}
                       aria-controls={`results-zone-panel-${zone}`}
                       className="flex w-full cursor-pointer items-center justify-between gap-3 rounded-lg text-left text-lg font-semibold text-[var(--foreground)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent-strong)]"
                       onClick={() =>
-                        setZoneExpanded((prev) => ({ ...prev, [zone]: !prev[zone] }))
+                        setZoneExpanded((prev) => ({
+                          ...prev,
+                          [zone]: !(prev[zone] ?? false),
+                        }))
                       }
                     >
                       <span>

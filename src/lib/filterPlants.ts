@@ -516,10 +516,19 @@ function birdFriendlySortValue(p: ScoredPlant): number {
   return p.birdFriendlyLabel.split(" · ").length;
 }
 
+/** Catalog strings are typed as non-null but the API occasionally omits them — sorts must not throw. */
+function safeLocaleCompare(
+  a: string | null | undefined,
+  b: string | null | undefined,
+  collatorOptions?: Intl.CollatorOptions,
+): number {
+  return String(a ?? "").localeCompare(String(b ?? ""), undefined, collatorOptions);
+}
+
 function tiebreakFireThenName(a: ScoredPlant, b: ScoredPlant): number {
   const f = b.fireScore - a.fireScore;
   if (f !== 0) return f;
-  return a.commonName.localeCompare(b.commonName);
+  return safeLocaleCompare(a.commonName, b.commonName, { sensitivity: "base", numeric: true });
 }
 
 /** First numeric feet from LWF mature height/width fields (values are usually plain numbers as text). */
@@ -598,7 +607,14 @@ function compareByMatureSize(a: ScoredPlant, b: ScoredPlant, ordering: PlantMatu
 
 function compareByMode(a: ScoredPlant, b: ScoredPlant, mode: PlantSortMode): number {
   if (mode === "alphabetical") {
-    return a.commonName.localeCompare(b.commonName);
+    const byName = safeLocaleCompare(a.commonName, b.commonName, {
+      sensitivity: "base",
+      numeric: true,
+    });
+    if (byName !== 0) return byName;
+    const g = safeLocaleCompare(a.genus, b.genus, { sensitivity: "base" });
+    if (g !== 0) return g;
+    return safeLocaleCompare(a.species, b.species, { sensitivity: "base" });
   }
   if (mode === "water") {
     return (a.waterUseLabel ?? "").localeCompare(b.waterUseLabel ?? "");
@@ -628,9 +644,20 @@ function compareByMode(a: ScoredPlant, b: ScoredPlant, mode: PlantSortMode): num
   return b.aestheticScore - a.aestheticScore;
 }
 
+/** Sort modes where the dropdown label should order the full list (not only break size ties). */
+function sortModeIsUserFacingPrimary(mode: PlantSortMode): boolean {
+  return (
+    mode === "alphabetical" ||
+    mode === "deerResistance" ||
+    mode === "pollinatorFriendly" ||
+    mode === "birdFriendly"
+  );
+}
+
 /**
- * Stable sort for UI reordering. When either mature height or width ordering is set, those run first
- * (height, then width); `mode` breaks remaining ties.
+ * Stable sort for UI reordering. Mature height/width run first for fire / water / maintenance modes
+ * (sort breaks ties). Alphabetical, deer, pollinator, and bird sorts are primary so they visibly
+ * reorder the grid even when a mature-size ordering is enabled.
  */
 export function sortScoredPlants(
   plants: ScoredPlant[],
@@ -641,11 +668,21 @@ export function sortScoredPlants(
   const anyMatureOrder =
     sizeOrdering.height !== "none" || sizeOrdering.width !== "none";
   copy.sort((a, b) => {
+    if (sortModeIsUserFacingPrimary(mode)) {
+      const byMode = compareByMode(a, b, mode);
+      if (byMode !== 0) return byMode;
+      if (anyMatureOrder) {
+        return compareByMatureSize(a, b, sizeOrdering);
+      }
+      return safeLocaleCompare(a.id, b.id);
+    }
     if (anyMatureOrder) {
       const bySize = compareByMatureSize(a, b, sizeOrdering);
       if (bySize !== 0) return bySize;
     }
-    return compareByMode(a, b, mode);
+    const byMode = compareByMode(a, b, mode);
+    if (byMode !== 0) return byMode;
+    return safeLocaleCompare(a.id, b.id);
   });
   return copy;
 }
@@ -662,7 +699,12 @@ export function groupPlantsByZone(plants: ScoredPlant[]): Record<DefensibleZoneI
   for (const p of plants) {
     const zones = p.recommendedZones.length ? p.recommendedZones : (["zone2"] as DefensibleZoneId[]);
     for (const z of zones) {
-      groups[z].push(p);
+      const id = String(z);
+      if (id === "zone1" || id === "zone2" || id === "zone3") {
+        groups[id].push(p);
+      } else if (id === "zone0") {
+        groups.zone1.push(p);
+      }
     }
   }
   return groups;

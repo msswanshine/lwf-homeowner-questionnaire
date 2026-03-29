@@ -117,6 +117,21 @@ body {
   }
 }
 
+/* Results toolbar selects: chevron on the right (native arrow hidden via appearance-none). */
+.results-select-chevron {
+  appearance: none;
+  padding-right: 2.35rem;
+  background-color: var(--surface);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%234d5c54' stroke-width='2.25' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.65rem center;
+  background-size: 1rem 1rem;
+}
+
+.results-select-chevron:disabled {
+  opacity: 0.7;
+}
+
 /* Results plant cards: 3D flip (hover, keyboard toggle, or while modal is open). */
 .plant-card-root {
   perspective: 1200px;
@@ -238,6 +253,7 @@ dialog.plant-detail-dialog button {
   display: grid;
   grid-template-rows: 0fr;
   transition: grid-template-rows 0.42s ease-out;
+  align-content: start;
 }
 
 .results-zone-panel[data-expanded="true"] {
