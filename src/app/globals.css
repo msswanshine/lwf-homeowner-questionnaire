@@ -1,0 +1,256 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f4f7f5;
+  --foreground: #0f1f17;
+  --muted: #4d5c54;
+  --surface: #ffffff;
+  --surface-2: #e6ede8;
+  --accent: #2d6a4f;
+  --accent-strong: #1b4332;
+  --accent-soft: #d8f3dc;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+}
+
+@media print {
+  .print\:hidden {
+    display: none !important;
+  }
+
+  body {
+    background: white;
+  }
+
+  main {
+    padding: 0;
+  }
+
+  .print-plant-report {
+    color: #111;
+  }
+
+  .print-zone-title {
+    margin: 0 0 6px;
+    font-size: 10pt;
+    font-weight: 700;
+    break-after: avoid;
+  }
+
+  .print-zone-section {
+    margin-bottom: 10pt;
+  }
+
+  .print-plant-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 7.5pt;
+    line-height: 1.25;
+  }
+
+  .print-plant-table th,
+  .print-plant-table td {
+    border: 1px solid #bbb;
+    padding: 3px 4px;
+    vertical-align: middle;
+    text-align: left;
+  }
+
+  .print-plant-table thead th {
+    font-weight: 700;
+    background: #eee;
+  }
+
+  .print-col-img {
+    width: 36px;
+    text-align: center;
+  }
+
+  .print-plant-thumb {
+    display: block;
+    width: 28px;
+    height: 28px;
+    margin: 0 auto;
+    object-fit: cover;
+    border-radius: 2px;
+  }
+
+  .print-thumb-placeholder {
+    display: inline-block;
+    width: 28px;
+    text-align: center;
+    color: #888;
+  }
+
+  .print-nowrap {
+    white-space: nowrap;
+  }
+
+  .print-scientific {
+    font-style: italic;
+    max-width: 120px;
+  }
+
+  .print-wrap {
+    max-width: 100px;
+    word-break: break-word;
+  }
+
+  .print-plant-table tbody tr {
+    break-inside: avoid;
+  }
+
+  @page {
+    margin: 0.45in;
+    size: letter portrait;
+  }
+}
+
+/* Results plant cards: 3D flip (hover, keyboard toggle, or while modal is open). */
+.plant-card-root {
+  perspective: 1200px;
+  cursor: pointer;
+}
+
+.plant-card-root .plant-card-flip-inner,
+.plant-card-root .plant-card-face {
+  cursor: pointer;
+}
+
+.plant-card-root img {
+  cursor: pointer;
+}
+
+.plant-card-flip-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.75s ease;
+}
+
+.plant-card-root.plant-card-root--flipped .plant-card-flip-inner {
+  transform: rotateY(180deg);
+}
+
+.plant-card-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.plant-card-face--back {
+  transform: rotateY(180deg);
+}
+
+/*
+ * 3D flip: the “hidden” face can still sit above the visible one for hit-testing.
+ * Disable pointer events on the face that isn’t showing so Learn more stays clickable.
+ */
+.plant-card-root:not(.plant-card-root--flipped) .plant-card-face--back {
+  pointer-events: none;
+}
+
+.plant-card-root.plant-card-root--flipped .plant-card-face:not(.plant-card-face--back) {
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .plant-card-flip-inner {
+    transition: none;
+  }
+}
+
+/* Center plant detail modal in the viewport (dialog + backdrop). */
+dialog.plant-detail-dialog {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  margin: 0;
+  max-height: min(85vh, 640px);
+  width: min(92vw, 28rem);
+  transform: translate(-50%, -50%);
+  border: none;
+  padding: 0;
+  opacity: 0;
+  transition: opacity 0.28s ease;
+}
+
+dialog.plant-detail-dialog[open] {
+  opacity: 1;
+}
+
+dialog.plant-detail-dialog[open].plant-detail-dialog--closing {
+  opacity: 0;
+}
+
+@starting-style {
+  dialog.plant-detail-dialog[open] {
+    opacity: 0;
+  }
+}
+
+dialog.plant-detail-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.45);
+  opacity: 0;
+  transition: opacity 0.28s ease;
+}
+
+dialog.plant-detail-dialog[open]::backdrop {
+  opacity: 1;
+}
+
+@starting-style {
+  dialog.plant-detail-dialog[open]::backdrop {
+    opacity: 0;
+  }
+}
+
+dialog.plant-detail-dialog[open].plant-detail-dialog--closing::backdrop {
+  opacity: 0;
+}
+
+dialog.plant-detail-dialog button {
+  cursor: pointer;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  dialog.plant-detail-dialog,
+  dialog.plant-detail-dialog::backdrop {
+    transition: none !important;
+  }
+}
+
+/* /results zone sections: smooth expand (grid 0fr → 1fr). */
+.results-zone-panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.42s ease-out;
+}
+
+.results-zone-panel[data-expanded="true"] {
+  grid-template-rows: 1fr;
+}
+
+.results-zone-panel-inner {
+  min-height: 0;
+  overflow: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .results-zone-panel {
+    transition: none;
+  }
+}
