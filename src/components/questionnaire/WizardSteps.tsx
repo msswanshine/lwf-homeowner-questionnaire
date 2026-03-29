@@ -2,7 +2,6 @@ import type { ReactNode } from "react";
 import type {
   AestheticOption,
   BudgetCadence,
-  BudgetTier,
   ColorPreference,
   DefensibleZoneId,
   DeerResistanceNeed,
@@ -69,17 +68,6 @@ function Toggle({
       </span>
     </label>
   );
-}
-
-function budgetTierOptions(cadence: BudgetCadence | null): { value: BudgetTier; label: string }[] {
-  const u = cadence === "perMonth" ? " / month" : cadence === "perYear" ? " / year" : " (project total)";
-  return [
-    { value: "under500", label: `Under $500${u}` },
-    { value: "500_1000", label: `$500–$1,000${u}` },
-    { value: "1000_2500", label: `$1,000–$2,500${u}` },
-    { value: "2500_5000", label: `$2,500–$5,000${u}` },
-    { value: "5000plus", label: `$5,000+${u}` },
-  ];
 }
 
 const PRIORITY_CHOICES: { id: TopPriority; label: string; hint: string }[] = [
@@ -245,8 +233,8 @@ export function renderQuestionnaireStep(
           <section className="space-y-3">
             <h2 className="text-lg font-semibold text-[var(--foreground)]">Defensible space zones</h2>
             <p className="text-sm text-[var(--muted)]">
-              Zone 0 hugs the home, Zone 1 is the lean, clean, green ring, and Zone 2 extends farther out.
-              Select every zone you are actively planning—this is the “room around the house” from a fire
+              Zone 1 is closest to the home, Zone 2 is the lean, clean, green ring, and Zone 3 extends farther
+              out. Select every zone you are actively planning—this is the “room around the house” from a fire
               perspective.{" "}
               <a
                 href="https://wfca.com/wildfire-articles/firewise-defensible-space/"
@@ -261,18 +249,18 @@ export function renderQuestionnaireStep(
               {(
                 [
                   {
-                    id: "zone0" as const,
-                    title: "Zone 0 (0–5 ft)",
+                    id: "zone1" as const,
+                    title: "Zone 1 (0–5 ft)",
                     hint: "Immediate home perimeter—emphasize non-combustible surfaces and ground-hugging plants.",
                   },
                   {
-                    id: "zone1" as const,
-                    title: "Zone 1 (5–30 ft)",
+                    id: "zone2" as const,
+                    title: "Zone 2 (5–30 ft)",
                     hint: "Well-spaced, irrigated plantings; watch ladder fuels.",
                   },
                   {
-                    id: "zone2" as const,
-                    title: "Zone 2 (30–100 ft)",
+                    id: "zone3" as const,
+                    title: "Zone 3 (30–100 ft)",
                     hint: "Broader landscape—fuel breaks and lower-density plantings.",
                   },
                 ] satisfies { id: DefensibleZoneId; title: string; hint: string }[]
@@ -468,41 +456,76 @@ export function renderQuestionnaireStep(
         <div className="space-y-8">
           <p className="text-sm font-medium text-[var(--accent-strong)]">Budget</p>
           <section className="space-y-3">
-            <h2 className="text-lg font-semibold text-[var(--foreground)]">How you count this budget</h2>
+            <h2 className="text-lg font-semibold text-[var(--foreground)]">Dollar amount</h2>
             <p className="text-sm text-[var(--muted)]">
-              Same dollar bands—pick whether this is a one-time project total or a recurring spend frame.
+              Whole dollars only, rounded. You’ll say next whether this is for the whole project, each month, or
+              each year.
             </p>
-            <select
-              className="w-full rounded-lg border border-black/15 bg-white px-3 py-3 text-base shadow-sm"
-              value={answers.budgetCadence ?? ""}
-              onChange={(e) =>
-                patch("budgetCadence", (e.target.value || null) as BudgetCadence | null)
-              }
-              aria-invalid={Boolean(errors.budgetCadence)}
-            >
-              <option value="">Choose cadence…</option>
-              <option value="oneTime">One-time project total</option>
-              <option value="perMonth">Roughly what I can spend per month</option>
-              <option value="perYear">Roughly what I can spend per year</option>
-            </select>
-            <FieldError message={errors.budgetCadence} />
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-base font-medium text-[var(--foreground)]" aria-hidden>
+                $
+              </span>
+              <input
+                type="number"
+                inputMode="numeric"
+                min={1}
+                step={1}
+                placeholder="e.g. 1500"
+                className="min-w-[12rem] flex-1 rounded-lg border border-black/15 bg-white px-3 py-3 text-base shadow-sm"
+                value={answers.budgetAmountDollars === null ? "" : String(answers.budgetAmountDollars)}
+                onChange={(e) => {
+                  const v = e.target.value.trim();
+                  if (v === "") {
+                    patch("budgetAmountDollars", null);
+                    return;
+                  }
+                  const n = Number.parseInt(v, 10);
+                  if (!Number.isFinite(n) || n < 0) return;
+                  patch("budgetAmountDollars", Math.min(99_999_999, n));
+                }}
+                aria-invalid={Boolean(errors.budgetAmountDollars)}
+              />
+            </div>
+            <FieldError message={errors.budgetAmountDollars} />
           </section>
           <section className="space-y-3">
-            <h2 className="text-lg font-semibold text-[var(--foreground)]">Amount band</h2>
-            <select
-              className="w-full rounded-lg border border-black/15 bg-white px-3 py-3 text-base shadow-sm"
-              value={answers.budget ?? ""}
-              onChange={(e) => patch("budget", (e.target.value || null) as BudgetTier | null)}
-              aria-invalid={Boolean(errors.budget)}
-            >
-              <option value="">Select a budget band…</option>
-              {budgetTierOptions(answers.budgetCadence).map((o) => (
-                <option key={o.value} value={o.value}>
-                  {o.label}
-                </option>
+            <h2 className="text-lg font-semibold text-[var(--foreground)]">This amount is for…</h2>
+            <p className="text-sm text-[var(--muted)]">Pick the option that matches how you think about this number.</p>
+            <div className="grid gap-3 sm:grid-cols-3">
+              {(
+                [
+                  { value: "oneTime" as const, label: "Whole project", hint: "One-time total for this effort." },
+                  {
+                    value: "perMonth" as const,
+                    label: "Each month",
+                    hint: "Roughly what you can spend per month.",
+                  },
+                  { value: "perYear" as const, label: "Each year", hint: "Roughly what you can spend per year." },
+                ] satisfies { value: BudgetCadence; label: string; hint: string }[]
+              ).map((opt) => (
+                <label
+                  key={opt.value}
+                  className={`flex cursor-pointer flex-col gap-1 rounded-xl border px-4 py-3 shadow-sm ${
+                    answers.budgetCadence === opt.value
+                      ? "border-[var(--accent-strong)] bg-[var(--accent-soft)]/60"
+                      : "border-black/15 bg-white"
+                  }`}
+                >
+                  <span className="flex items-start gap-2">
+                    <input
+                      type="radio"
+                      name="budgetCadence"
+                      className="mt-1 accent-[var(--accent)]"
+                      checked={answers.budgetCadence === opt.value}
+                      onChange={() => patch("budgetCadence", opt.value)}
+                    />
+                    <span className="font-medium text-[var(--foreground)]">{opt.label}</span>
+                  </span>
+                  <span className="pl-7 text-sm text-[var(--muted)]">{opt.hint}</span>
+                </label>
               ))}
-            </select>
-            <FieldError message={errors.budget} />
+            </div>
+            <FieldError message={errors.budgetCadence} />
           </section>
           <section className="space-y-3">
             <h2 className="text-lg font-semibold text-[var(--foreground)]">Where will you probably get plants?</h2>

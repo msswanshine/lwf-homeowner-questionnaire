@@ -2,6 +2,7 @@
 
 import { memo, useCallback, useEffect, useId, useRef, useState } from "react";
 import type { PlantValue, ScoredPlant } from "@/types";
+import { getPlantById } from "@/lib/plantApi";
 import { addPlantToMyList, removePlantFromMyList } from "@/lib/localStorage";
 import { useMyListIds } from "./MyListProvider";
 
@@ -83,6 +84,7 @@ export const PlantCard = memo(function PlantCard({
   const [hover, setHover] = useState(false);
   const [kbdFlip, setKbdFlip] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
+  const [modalValues, setModalValues] = useState<PlantValue[] | null>(null);
   const myListIds = useMyListIds();
   const onMyList = myListIds.includes(plant.id);
 
@@ -154,6 +156,25 @@ export const PlantCard = memo(function PlantCard({
       }
     };
   }, []);
+
+  useEffect(() => {
+    if (!modalOpen) {
+      setModalValues(null);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const full = await getPlantById(plant.id);
+        if (!cancelled) setModalValues(full.values);
+      } catch {
+        if (!cancelled) setModalValues(null);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [modalOpen, plant.id]);
 
   function handleDialogClose() {
     setModalOpen(false);
@@ -345,8 +366,14 @@ export const PlantCard = memo(function PlantCard({
           e.preventDefault();
           requestDialogClose();
         }}
+        onClick={(e) => {
+          if (e.target === e.currentTarget) requestDialogClose();
+        }}
       >
-        <div className="flex max-h-[min(85vh,640px)] flex-col overflow-hidden rounded-2xl border border-black/15 bg-[var(--surface)]">
+        <div
+          className="plant-detail-dialog-panel flex max-h-[min(85vh,640px)] flex-col overflow-hidden rounded-2xl bg-[var(--surface)]"
+          onClick={(e) => e.stopPropagation()}
+        >
           <div className="border-b border-black/10 px-4 py-3">
             <h2 id={dialogTitleId} className="text-base font-semibold">
               {plant.commonName}
@@ -359,7 +386,7 @@ export const PlantCard = memo(function PlantCard({
           <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3">
             <p className="mb-2 text-xs text-[var(--muted)]">Catalog attributes from Living with Fire</p>
             <ul className="space-y-2 text-sm">
-              {consolidatedCatalogRows(plant.values).map((row) => (
+              {consolidatedCatalogRows(modalValues ?? plant.values).map((row) => (
                 <li key={row.name}>
                   <span className="font-semibold">{row.name}: </span>
                   <span>{row.text}</span>
@@ -377,8 +404,12 @@ export const PlantCard = memo(function PlantCard({
               }
               disabled={onMyList && !fromMyPlan}
               onClick={() => {
-                if (fromMyPlan && onMyList) removePlantFromMyList(plant.id);
-                else addPlantToMyList(plant.id);
+                if (fromMyPlan && onMyList) {
+                  removePlantFromMyList(plant.id);
+                  return;
+                }
+                addPlantToMyList(plant.id);
+                requestDialogClose();
               }}
               aria-label={
                 onMyList

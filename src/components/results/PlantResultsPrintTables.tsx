@@ -1,10 +1,11 @@
 import { groupPlantsByZone } from "@/lib/filterPlants";
-import type { DefensibleZoneId, ScoredPlant } from "@/types";
+import { formatQuestionnaireForPrint } from "@/lib/questionnairePrintSummary";
+import type { DefensibleZoneId, QuestionnaireAnswers, ScoredPlant } from "@/types";
 
 const ZONE_LABEL: Record<DefensibleZoneId, string> = {
-  zone0: "Zone 0 — 0 to 5 ft",
-  zone1: "Zone 1 — 5 to 30 ft",
-  zone2: "Zone 2 — 30 to 100 ft",
+  zone1: "Zone 1 — 0 to 5 ft",
+  zone2: "Zone 2 — 5 to 30 ft",
+  zone3: "Zone 3 — 30 to 100 ft",
 };
 
 function scientificLine(plant: ScoredPlant): string {
@@ -35,16 +36,35 @@ function wildlifePrintCell(plant: ScoredPlant): string {
 export function PlantResultsPrintTables({
   grouped,
   myPlanPlants,
+  answers,
 }: {
   grouped: Record<DefensibleZoneId, ScoredPlant[]>;
   /** When non-empty, print/PDF uses these selections (My Plan) instead of the full recommendation set. */
   myPlanPlants: ScoredPlant[];
+  /** Questionnaire inputs used to generate recommendations (same session as this printout). */
+  answers: QuestionnaireAnswers | null;
 }) {
   const printFromMyPlan = myPlanPlants.length > 0;
   const groupedForPrint = printFromMyPlan ? groupPlantsByZone(myPlanPlants) : grouped;
+  const answerLines = answers ? formatQuestionnaireForPrint(answers) : null;
 
   return (
     <div className="print-plant-report hidden space-y-5 print:block">
+      {answerLines ? (
+        <section className="print-answers-summary" aria-label="Your questionnaire inputs">
+          <h2 className="print-answers-title">Your inputs</h2>
+          <table className="print-answers-table">
+            <tbody>
+              {answerLines.map((row) => (
+                <tr key={row.label}>
+                  <th scope="row">{row.label}</th>
+                  <td>{row.value}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </section>
+      ) : null}
       <div className="print-report-heading">
         <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--muted)]">
           FireWise plant list
@@ -59,7 +79,7 @@ export function PlantResultsPrintTables({
           </p>
         ) : null}
       </div>
-      {(["zone0", "zone1", "zone2"] as const).map((zone) => {
+      {(["zone1", "zone2", "zone3"] as const).map((zone) => {
         const list = groupedForPrint[zone];
         if (!list.length) return null;
         return (

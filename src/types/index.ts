@@ -7,7 +7,8 @@ export type PropertySize = "small" | "medium" | "large" | "veryLarge";
 
 export type UsdaZone = "5" | "6" | "7" | "8" | "9";
 
-export type DefensibleZoneId = "zone0" | "zone1" | "zone2";
+/** Firewise-style numbering: Zone 1 = immediate (≈0–5 ft), 2 = intermediate (≈5–30 ft), 3 = extended (≈30–100 ft). */
+export type DefensibleZoneId = "zone1" | "zone2" | "zone3";
 
 export type Irrigation = "none" | "drip" | "sprinkler" | "greywater";
 
@@ -17,6 +18,7 @@ export type MaintenanceTime = "veryLow" | "low" | "moderate" | "high";
 
 export type PhysicalAbility = "none" | "lowHeight" | "minimalBending";
 
+/** Legacy questionnaire saves used bands instead of a dollar amount. */
 export type BudgetTier =
   | "under500"
   | "500_1000"
@@ -24,7 +26,7 @@ export type BudgetTier =
   | "2500_5000"
   | "5000plus";
 
-/** How the user thinks about the dollar bands in BudgetTier. */
+/** How the dollar amount should be read: whole project, per month, or per year. */
 export type BudgetCadence = "oneTime" | "perMonth" | "perYear";
 
 export type SourcingOption =
@@ -83,7 +85,8 @@ export interface QuestionnaireAnswers {
   deerResistance: DeerResistanceNeed | null;
   maintenanceTime: MaintenanceTime | null;
   physicalAbility: PhysicalAbility | null;
-  budget: BudgetTier | null;
+  /** Whole dollars (no cents). User’s rough budget for the chosen {@link budgetCadence}. */
+  budgetAmountDollars: number | null;
   budgetCadence: BudgetCadence | null;
   sourcing: SourcingOption[];
   aesthetics: AestheticOption[];

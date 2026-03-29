@@ -126,23 +126,23 @@ function fireLabelFromScores(scores: number[]): FireResistanceLabel {
 function inferZonesFromHiz(hizLabels: string[]): DefensibleZoneId[] {
   const joined = hizLabels.join(" ").toLowerCase();
   const zones = new Set<DefensibleZoneId>();
-  if (joined.includes("0-5") || joined.includes("0–5")) zones.add("zone0");
+  if (joined.includes("0-5") || joined.includes("0–5")) zones.add("zone1");
   if (
     joined.includes("5-30") ||
     joined.includes("10-30") ||
     joined.includes("5–30") ||
     joined.includes("10–30")
   )
-    zones.add("zone1");
+    zones.add("zone2");
   if (
     joined.includes("30-100") ||
     joined.includes("50-100") ||
     joined.includes("30–100") ||
     joined.includes("50–100")
   )
-    zones.add("zone2");
+    zones.add("zone3");
   const short = hizLabels.some((h) => h.includes("<2") || h.includes("2 ft"));
-  if (short) zones.add("zone0");
+  if (short) zones.add("zone1");
   return [...zones];
 }
 
@@ -155,7 +155,7 @@ function plantMatchesDefensibleZones(
   const inferred = inferZonesFromHiz(hiz);
   const short = valuesFor(plant, ATTR.shortHeight).some((s) => s === "true");
   if (inferred.length === 0) {
-    return selected.includes("zone1") || (selected.includes("zone0") && short);
+    return selected.includes("zone2") || (selected.includes("zone1") && short);
   }
   return selected.some((z) => inferred.includes(z));
 }
@@ -392,7 +392,17 @@ function priorityBlendScore(
     else if (w.includes("moderate")) s += 1;
   }
   if (pri.has("budget")) {
-    const tight = user.budget === "under500" || user.budget === "500_1000";
+    const amt = user.budgetAmountDollars;
+    const cad = user.budgetCadence;
+    const tight =
+      amt !== null &&
+      (cad === "oneTime"
+        ? amt < 1000
+        : cad === "perMonth"
+          ? amt < 500
+          : cad === "perYear"
+            ? amt < 12_000
+            : amt < 1000);
     const score = numericCharacterScore(plant);
     if (tight && score !== null && score <= 6) s += 2;
     if (!tight) s += 1;
@@ -456,7 +466,7 @@ export function filterAndScorePlants(
         ? inferZonesFromHiz(valuesFor(plant, ATTR.hiz))
         : answers.defensibleZones.length
           ? answers.defensibleZones
-          : (["zone1"] as DefensibleZoneId[]);
+          : (["zone2"] as DefensibleZoneId[]);
     const waterUseLabel = valuesFor(plant, ATTR.waterAmount)[0] ?? null;
     const maintenanceLabel = numericCharacterScore(plant)?.toString() ?? null;
     const maintNum = numericCharacterScore(plant);
@@ -516,10 +526,19 @@ function birdFriendlySortValue(p: ScoredPlant): number {
   return p.birdFriendlyLabel.split(" · ").length;
 }
 
+/** Catalog strings are typed as non-null but the API occasionally omits them — sorts must not throw. */
+function safeLocaleCompare(
+  a: string | null | undefined,
+  b: string | null | undefined,
+  collatorOptions?: Intl.CollatorOptions,
+): number {
+  return String(a ?? "").localeCompare(String(b ?? ""), undefined, collatorOptions);
+}
+
 function tiebreakFireThenName(a: ScoredPlant, b: ScoredPlant): number {
   const f = b.fireScore - a.fireScore;
   if (f !== 0) return f;
-  return a.commonName.localeCompare(b.commonName);
+  return safeLocaleCompare(a.commonName, b.commonName, { sensitivity: "base", numeric: true });
 }
 
 /** First numeric feet from LWF mature height/width fields (values are usually plain numbers as text). */
@@ -598,7 +617,14 @@ function compareByMatureSize(a: ScoredPlant, b: ScoredPlant, ordering: PlantMatu
 
 function compareByMode(a: ScoredPlant, b: ScoredPlant, mode: PlantSortMode): number {
   if (mode === "alphabetical") {
-    return a.commonName.localeCompare(b.commonName);
+    const byName = safeLocaleCompare(a.commonName, b.commonName, {
+      sensitivity: "base",
+      numeric: true,
+    });
+    if (byName !== 0) return byName;
+    const g = safeLocaleCompare(a.genus, b.genus, { sensitivity: "base" });
+    if (g !== 0) return g;
+    return safeLocaleCompare(a.species, b.species, { sensitivity: "base" });
   }
   if (mode === "water") {
     return (a.waterUseLabel ?? "").localeCompare(b.waterUseLabel ?? "");
@@ -628,9 +654,20 @@ function compareByMode(a: ScoredPlant, b: ScoredPlant, mode: PlantSortMode): num
   return b.aestheticScore - a.aestheticScore;
 }
 
+/** Sort modes where the dropdown label should order the full list (not only break size ties). */
+function sortModeIsUserFacingPrimary(mode: PlantSortMode): boolean {
+  return (
+    mode === "alphabetical" ||
+    mode === "deerResistance" ||
+    mode === "pollinatorFriendly" ||
+    mode === "birdFriendly"
+  );
+}
+
 /**
- * Stable sort for UI reordering. When either mature height or width ordering is set, those run first
- * (height, then width); `mode` breaks remaining ties.
+ * Stable sort for UI reordering. Mature height/width run first for fire / water / maintenance modes
+ * (sort breaks ties). Alphabetical, deer, pollinator, and bird sorts are primary so they visibly
+ * reorder the grid even when a mature-size ordering is enabled.
  */
 export function sortScoredPlants(
   plants: ScoredPlant[],
@@ -641,11 +678,21 @@ export function sortScoredPlants(
   const anyMatureOrder =
     sizeOrdering.height !== "none" || sizeOrdering.width !== "none";
   copy.sort((a, b) => {
+    if (sortModeIsUserFacingPrimary(mode)) {
+      const byMode = compareByMode(a, b, mode);
+      if (byMode !== 0) return byMode;
+      if (anyMatureOrder) {
+        return compareByMatureSize(a, b, sizeOrdering);
+      }
+      return safeLocaleCompare(a.id, b.id);
+    }
     if (anyMatureOrder) {
       const bySize = compareByMatureSize(a, b, sizeOrdering);
       if (bySize !== 0) return bySize;
     }
-    return compareByMode(a, b, mode);
+    const byMode = compareByMode(a, b, mode);
+    if (byMode !== 0) return byMode;
+    return safeLocaleCompare(a.id, b.id);
   });
   return copy;
 }
@@ -655,14 +702,19 @@ export function sortScoredPlants(
  */
 export function groupPlantsByZone(plants: ScoredPlant[]): Record<DefensibleZoneId, ScoredPlant[]> {
   const groups: Record<DefensibleZoneId, ScoredPlant[]> = {
-    zone0: [],
     zone1: [],
     zone2: [],
+    zone3: [],
   };
   for (const p of plants) {
-    const zones = p.recommendedZones.length ? p.recommendedZones : (["zone1"] as DefensibleZoneId[]);
+    const zones = p.recommendedZones.length ? p.recommendedZones : (["zone2"] as DefensibleZoneId[]);
     for (const z of zones) {
-      groups[z].push(p);
+      const id = String(z);
+      if (id === "zone1" || id === "zone2" || id === "zone3") {
+        groups[id].push(p);
+      } else if (id === "zone0") {
+        groups.zone1.push(p);
+      }
     }
   }
   return groups;

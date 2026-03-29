@@ -43,7 +43,8 @@ export default function Home() {
             <p className="font-semibold">Before you begin</p>
             <p className="mt-2 text-[var(--muted)]">
               Have a rough sense of your USDA zone, which defensible-space rings you&apos;re working on,
-              and how much maintenance time you can sustain seasonally.
+              and how much maintenance time you can sustain seasonally. See this link for more information (opens in new tab): 
+              <a className="font-semibold text-[var(--accent-strong)] underline-offset-4 hover:underline" href="https://wfca.com/wildfire-articles/firewise-defensible-space/" target="_blank" rel="noreferrer">https://wfca.com/wildfire-articles/firewise-defensible-space/</a>
             </p>
           </div>
         </div>

@@ -12,6 +12,7 @@ import type {
   PlantValue,
   PlantsListResponse,
 } from "@/types";
+import { getPlannerBulkAttributeIdsCsv } from "@/lib/lwfAttributeRegistry";
 
 export const PLANT_API_BASE =
   process.env.NEXT_PUBLIC_PLANT_API_BASE ?? "https://lwf-api.vercel.app/api/v2";
@@ -32,11 +33,19 @@ const plantDetailCache = new Map<string, PlantDetail>();
 /** One entry per list query (offset/limit etc.) so parallel list pages don’t clobber each other. */
 const listResponseCache = new Map<string, PlantsListResponse>();
 
-function buildUrl(path: string, query?: Record<string, string | number | boolean | undefined>) {
+type QueryPrimitive = string | number | boolean;
+type QueryValue = QueryPrimitive | QueryPrimitive[] | undefined;
+
+function buildUrl(path: string, query?: Record<string, QueryValue>) {
   const url = new URL(path.startsWith("http") ? path : `${PLANT_API_BASE}${path}`);
   if (query) {
     for (const [k, v] of Object.entries(query)) {
-      if (v !== undefined) url.searchParams.set(k, String(v));
+      if (v === undefined) continue;
+      if (Array.isArray(v)) {
+        for (const item of v) url.searchParams.append(k, String(item));
+      } else {
+        url.searchParams.set(k, String(v));
+      }
     }
   }
   return url.toString();
@@ -45,7 +54,7 @@ function buildUrl(path: string, query?: Record<string, string | number | boolean
 /**
  * Performs a GET request and parses JSON, throwing {@link PlantApiError} on failure.
  */
-async function getJson<T>(path: string, query?: Record<string, string | number | boolean | undefined>): Promise<T> {
+async function getJson<T>(path: string, query?: Record<string, QueryValue>): Promise<T> {
   const url = buildUrl(path, query);
   let response: Response;
   try {
@@ -86,16 +95,20 @@ export async function listPlants(options: {
   offset?: number;
   includeImages?: boolean;
   search?: string;
+  /** Repeated `filterByValue=attributeUuid:rawValueId` (OR within attribute, AND across). */
+  filterByValue?: string[];
 }): Promise<PlantsListResponse> {
   const cacheKey = JSON.stringify(options);
   const hit = listResponseCache.get(cacheKey);
   if (hit) return hit;
 
+  const filters = options.filterByValue?.length ? options.filterByValue : undefined;
   const data = await getJson<PlantsListResponse>("/plants", {
     limit: options.limit ?? 40,
     offset: options.offset ?? 0,
     includeImages: options.includeImages ?? true,
     search: options.search,
+    ...(filters ? { filterByValue: filters } : {}),
   });
   listResponseCache.set(cacheKey, data);
   return data;
@@ -200,11 +213,11 @@ function mergeBulkFragments(into: BulkValuesByPlant, fragment: BulkValuesByPlant
  */
 async function fetchBulkResolvedValues(
   plantIds: string[],
-  options: { chunkSize: number; rowLimit: number },
+  options: { chunkSize: number; rowLimit: number; attributeIdsCsv: string },
 ): Promise<BulkValuesByPlant> {
   if (plantIds.length === 0) return {};
   const merged: BulkValuesByPlant = {};
-  const { chunkSize, rowLimit } = options;
+  const { chunkSize, rowLimit, attributeIdsCsv } = options;
 
   for (let i = 0; i < plantIds.length; i += chunkSize) {
     const chunk = plantIds.slice(i, i + chunkSize);
@@ -212,6 +225,7 @@ async function fetchBulkResolvedValues(
       plantIds: chunk.join(","),
       resolve: true,
       limit: rowLimit,
+      ...(attributeIdsCsv ? { attributeIds: attributeIdsCsv } : {}),
     });
     mergeBulkFragments(merged, data.values ?? {});
   }
@@ -236,10 +250,12 @@ export async function loadPlantsForPlanning(options: {
   listPageSize: number;
   /** Plant IDs per bulk request (URL length; default ~80). */
   bulkPlantChunkSize: number;
-  /** Max rows per bulk response (catalog plants can have 100+ values each). */
+  /** Max rows per bulk response (API max 50,000). */
   bulkValueRowLimit: number;
   /** When true, list rows may include `primaryImage` for cards (slightly larger list payload). */
   listIncludeImages?: boolean;
+  /** Server-side list narrowing; uses sequential pagination until `maxPlants` or exhausted. */
+  filterByValue?: string[];
 }): Promise<PlantDetail[]> {
   const {
     maxPlants,
@@ -247,33 +263,60 @@ export async function loadPlantsForPlanning(options: {
     bulkPlantChunkSize,
     bulkValueRowLimit,
     listIncludeImages = true,
+    filterByValue,
   } = options;
 
-  const pagesNeeded = Math.max(1, Math.ceil(maxPlants / listPageSize));
-  const pages = await Promise.all(
-    Array.from({ length: pagesNeeded }, (_, i) =>
-      listPlants({
-        limit: listPageSize,
-        offset: i * listPageSize,
-        includeImages: listIncludeImages,
-      }),
-    ),
-  );
+  const attributeIdsCsv = await getPlannerBulkAttributeIdsCsv();
+  const filters = filterByValue?.length ? filterByValue : undefined;
 
   const order: string[] = [];
   const listById = new Map<string, PlantListItem>();
-  outer: for (const page of pages) {
-    for (const p of page.data) {
-      if (listById.has(p.id)) continue;
-      if (order.length >= maxPlants) break outer;
-      listById.set(p.id, p);
-      order.push(p.id);
+
+  if (filters) {
+    let offset = 0;
+    while (order.length < maxPlants) {
+      const page = await listPlants({
+        limit: listPageSize,
+        offset,
+        includeImages: listIncludeImages,
+        filterByValue: filters,
+      });
+      if (page.data.length === 0) break;
+      for (const p of page.data) {
+        if (listById.has(p.id)) continue;
+        listById.set(p.id, p);
+        order.push(p.id);
+        if (order.length >= maxPlants) break;
+      }
+      const hasMore = page.meta?.pagination?.hasMore ?? page.data.length >= listPageSize;
+      if (!hasMore) break;
+      offset += listPageSize;
+    }
+  } else {
+    const pagesNeeded = Math.max(1, Math.ceil(maxPlants / listPageSize));
+    const pages = await Promise.all(
+      Array.from({ length: pagesNeeded }, (_, i) =>
+        listPlants({
+          limit: listPageSize,
+          offset: i * listPageSize,
+          includeImages: listIncludeImages,
+        }),
+      ),
+    );
+    outer: for (const page of pages) {
+      for (const p of page.data) {
+        if (listById.has(p.id)) continue;
+        if (order.length >= maxPlants) break outer;
+        listById.set(p.id, p);
+        order.push(p.id);
+      }
     }
   }
 
   const bulkByPlant = await fetchBulkResolvedValues(order, {
     chunkSize: bulkPlantChunkSize,
     rowLimit: bulkValueRowLimit,
+    attributeIdsCsv,
   });
 
   return order.map((id) => {
