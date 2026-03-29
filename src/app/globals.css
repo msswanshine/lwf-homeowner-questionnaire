@@ -145,6 +145,91 @@ body {
     break-inside: avoid;
   }
 
+  /*
+   * Action plan (/action-plan): print/PDF is a continuous checklist. `<details>` nodes are expanded
+   * via beforeprint in ActionPlanView; styles below make phases read as labeled sections.
+   */
+  .action-plan-view > header h1 {
+    margin: 0 0 6pt;
+    color: #000;
+  }
+
+  .action-plan-checklist {
+    display: block;
+  }
+
+  .action-plan-phase {
+    border: 1pt solid #555 !important;
+    background: #fff !important;
+    padding: 10pt 12pt !important;
+    margin: 0 0 11pt !important;
+    break-inside: auto;
+  }
+
+  .action-plan-phase summary {
+    display: block;
+    list-style: none;
+    font-size: 12pt;
+    font-weight: 700;
+    color: #000;
+    border-bottom: 1pt solid #222;
+    padding-bottom: 4pt;
+    margin: 0 0 8pt;
+    break-after: avoid;
+  }
+
+  .action-plan-phase summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .action-plan-phase-intro {
+    font-size: 9.5pt !important;
+    line-height: 1.35;
+    color: #333 !important;
+    margin: 0 0 8pt !important;
+  }
+
+  .action-plan-task-row {
+    border: 1pt solid #ccc !important;
+    background: #f9faf9 !important;
+    padding: 5pt 7pt !important;
+  }
+
+  .action-plan-task-row span {
+    font-size: 9.5pt;
+    line-height: 1.35;
+    color: #111;
+  }
+
+  .action-plan-maintenance section {
+    box-shadow: none !important;
+    border: 1pt solid #555 !important;
+    border-radius: 0 !important;
+    padding: 10pt 12pt !important;
+    margin-top: 4pt !important;
+    background: #fff !important;
+    break-inside: auto;
+  }
+
+  .action-plan-maintenance h2 {
+    font-size: 11pt;
+    margin: 0 0 6pt;
+    color: #000;
+    break-after: avoid;
+  }
+
+  .action-plan-maintenance table {
+    font-size: 8.5pt;
+  }
+
+  .action-plan-maintenance thead {
+    break-after: avoid;
+  }
+
+  .action-plan-maintenance tr {
+    break-inside: avoid;
+  }
+
   @page {
     margin: 0.45in;
     size: letter portrait;
