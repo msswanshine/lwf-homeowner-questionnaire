@@ -47,9 +47,15 @@ export function validateQuestionnaireStep(
       break;
     case 4:
       if (!answers.budgetCadence) {
-        errors.budgetCadence = "Choose how you’re thinking about this budget.";
+        errors.budgetCadence = "Choose whether this amount is for the project, a month, or a year.";
       }
-      if (!answers.budget) errors.budget = "Select a budget range.";
+      if (
+        answers.budgetAmountDollars === null ||
+        !Number.isFinite(answers.budgetAmountDollars) ||
+        answers.budgetAmountDollars < 1
+      ) {
+        errors.budgetAmountDollars = "Enter your budget in whole dollars (at least $1).";
+      }
       if (answers.sourcing.length === 0) {
         errors.sourcing = "Pick at least one place you might buy or get plants.";
       }

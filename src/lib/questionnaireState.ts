@@ -1,8 +1,17 @@
 import type {
+  BudgetTier,
   DefensibleZoneId,
   QuestionnaireAnswers,
   TopPriority,
 } from "@/types";
+
+const LEGACY_TIER_TO_DOLLARS: Record<BudgetTier, number> = {
+  under500: 400,
+  "500_1000": 750,
+  "1000_2500": 1750,
+  "2500_5000": 3750,
+  "5000plus": 7500,
+};
 
 const LEGACY_DEFENSIBLE_ZONE: Record<string, DefensibleZoneId | undefined> = {
   zone0: "zone1",
@@ -45,7 +54,7 @@ export function createEmptyAnswers(): QuestionnaireAnswers {
     deerResistance: null,
     maintenanceTime: null,
     physicalAbility: null,
-    budget: null,
+    budgetAmountDollars: null,
     budgetCadence: null,
     sourcing: [],
     aesthetics: [],
@@ -66,6 +75,8 @@ type RawStored = Partial<QuestionnaireAnswers> & {
   rogueValleyResident?: boolean | null;
   /** Removed from questionnaire; stripped when loading legacy saves. */
   nearHomePlantingSpace?: unknown;
+  /** Replaced by budgetAmountDollars. */
+  budget?: BudgetTier | null;
 };
 
 /**
@@ -95,6 +106,26 @@ export function normalizeQuestionnaireAnswers(raw: unknown): QuestionnaireAnswer
   delete p.rogueValleyResident;
   delete p.nearHomePlantingSpace;
 
+  const legacyBudget = p.budget;
+  delete p.budget;
+
+  let budgetAmountDollars: number | null = base.budgetAmountDollars;
+  const rawBudgetAmt: unknown = (raw as Record<string, unknown>).budgetAmountDollars;
+  if (typeof rawBudgetAmt === "number" && Number.isFinite(rawBudgetAmt) && rawBudgetAmt >= 0) {
+    budgetAmountDollars = Math.min(99_999_999, Math.round(rawBudgetAmt));
+  } else if (typeof rawBudgetAmt === "string" && rawBudgetAmt.trim() !== "") {
+    const n = Number.parseInt(rawBudgetAmt, 10);
+    if (Number.isFinite(n) && n >= 0) budgetAmountDollars = Math.min(99_999_999, n);
+  }
+  if (
+    budgetAmountDollars === null &&
+    legacyBudget != null &&
+    typeof legacyBudget === "string" &&
+    legacyBudget in LEGACY_TIER_TO_DOLLARS
+  ) {
+    budgetAmountDollars = LEGACY_TIER_TO_DOLLARS[legacyBudget as BudgetTier];
+  }
+
   return {
     ...base,
     ...p,
@@ -109,5 +140,6 @@ export function normalizeQuestionnaireAnswers(raw: unknown): QuestionnaireAnswer
     colors: Array.isArray(p.colors) ? p.colors : base.colors,
     seasonal: Array.isArray(p.seasonal) ? p.seasonal : base.seasonal,
     priorities,
+    budgetAmountDollars,
   };
 }

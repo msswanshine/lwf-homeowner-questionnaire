@@ -328,7 +328,11 @@ export function PlantResultsView() {
               );
             })}
           </div>
-          <PlantResultsPrintTables grouped={grouped} myPlanPlants={myPlanPlantsForPrint} />
+          <PlantResultsPrintTables
+            grouped={grouped}
+            myPlanPlants={myPlanPlantsForPrint}
+            answers={answers}
+          />
         </>
       ) : null}
 

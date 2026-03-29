@@ -14,28 +14,39 @@ function budgetCadenceSentence(answers: QuestionnaireAnswers): string {
   return "You entered budget as a one-time project total—keep phases sequential until that amount is spent.";
 }
 
+function budgetTierForPhase3(answers: QuestionnaireAnswers): "tight" | "mid" | "generous" {
+  const amt = answers.budgetAmountDollars;
+  if (amt === null) return "mid";
+  const c = answers.budgetCadence;
+  if (c === "perMonth") {
+    if (amt < 500) return "tight";
+    if (amt < 2000) return "mid";
+    return "generous";
+  }
+  if (c === "perYear") {
+    if (amt < 6000) return "tight";
+    if (amt < 15_000) return "mid";
+    return "generous";
+  }
+  if (c === "oneTime") {
+    if (amt < 1000) return "tight";
+    if (amt < 2500) return "mid";
+    return "generous";
+  }
+  if (amt < 1000) return "tight";
+  if (amt < 2500) return "mid";
+  return "generous";
+}
+
 function budgetNarrative(answers: QuestionnaireAnswers): string {
   const cadence = budgetCadenceSentence(answers);
-  let detail: string;
-  switch (answers.budget) {
-    case "under500":
-      detail =
-        "Phase 3 focuses on smaller containers and fast-impact swaps that fit a tight budget.";
-      break;
-    case "500_1000":
-    case "1000_2500":
-      detail =
-        "Phase 3 sequences medium-sized purchases with a few anchor shrubs first.";
-      break;
-    case "2500_5000":
-    case "5000plus":
-      detail =
-        "Phase 3 can include larger specimens; still stage work outward from the home.";
-      break;
-    default:
-      detail =
-        "Phase 3 sequences plantings from the home outward, pacing purchases to your budget.";
-  }
+  const tier = budgetTierForPhase3(answers);
+  const detail =
+    tier === "tight"
+      ? "Phase 3 focuses on smaller containers and fast-impact swaps that fit a tight budget."
+      : tier === "mid"
+        ? "Phase 3 sequences medium-sized purchases with a few anchor shrubs first."
+        : "Phase 3 can include larger specimens; still stage work outward from the home.";
   return `${cadence} ${detail}`;
 }
 

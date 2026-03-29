@@ -392,7 +392,17 @@ function priorityBlendScore(
     else if (w.includes("moderate")) s += 1;
   }
   if (pri.has("budget")) {
-    const tight = user.budget === "under500" || user.budget === "500_1000";
+    const amt = user.budgetAmountDollars;
+    const cad = user.budgetCadence;
+    const tight =
+      amt !== null &&
+      (cad === "oneTime"
+        ? amt < 1000
+        : cad === "perMonth"
+          ? amt < 500
+          : cad === "perYear"
+            ? amt < 12_000
+            : amt < 1000);
     const score = numericCharacterScore(plant);
     if (tight && score !== null && score <= 6) s += 2;
     if (!tight) s += 1;

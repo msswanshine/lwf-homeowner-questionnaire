@@ -18,6 +18,7 @@ export type MaintenanceTime = "veryLow" | "low" | "moderate" | "high";
 
 export type PhysicalAbility = "none" | "lowHeight" | "minimalBending";
 
+/** Legacy questionnaire saves used bands instead of a dollar amount. */
 export type BudgetTier =
   | "under500"
   | "500_1000"
@@ -25,7 +26,7 @@ export type BudgetTier =
   | "2500_5000"
   | "5000plus";
 
-/** How the user thinks about the dollar bands in BudgetTier. */
+/** How the dollar amount should be read: whole project, per month, or per year. */
 export type BudgetCadence = "oneTime" | "perMonth" | "perYear";
 
 export type SourcingOption =
@@ -84,7 +85,8 @@ export interface QuestionnaireAnswers {
   deerResistance: DeerResistanceNeed | null;
   maintenanceTime: MaintenanceTime | null;
   physicalAbility: PhysicalAbility | null;
-  budget: BudgetTier | null;
+  /** Whole dollars (no cents). User’s rough budget for the chosen {@link budgetCadence}. */
+  budgetAmountDollars: number | null;
   budgetCadence: BudgetCadence | null;
   sourcing: SourcingOption[];
   aesthetics: AestheticOption[];

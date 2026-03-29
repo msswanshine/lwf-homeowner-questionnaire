@@ -6,7 +6,6 @@ import { useEffect, useMemo, useState } from "react";
 import type {
   AestheticOption,
   BudgetCadence,
-  BudgetTier,
   ColorPreference,
   DefensibleZoneId,
   DeerResistanceNeed,
@@ -139,24 +138,22 @@ const PRIORITY_LABEL: Record<TopPriority, string> = {
   budget: "Saving money",
 };
 
-function formatBudgetLine(tier: BudgetTier | null, cadence: BudgetCadence | null): string {
-  if (!tier) return "—";
+function formatBudgetLine(amount: number | null, cadence: BudgetCadence | null): string {
+  if (amount === null || amount < 1) return "—";
+  const money = new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 0,
+  }).format(amount);
   const suffix =
     cadence === "perMonth"
       ? " / month"
       : cadence === "perYear"
         ? " / year"
         : cadence === "oneTime"
-          ? " (project total)"
+          ? " (whole project)"
           : "";
-  const band: Record<BudgetTier, string> = {
-    under500: "Under $500",
-    "500_1000": "$500–$1,000",
-    "1000_2500": "$1,000–$2,500",
-    "2500_5000": "$2,500–$5,000",
-    "5000plus": "$5,000+",
-  };
-  return `${band[tier]}${suffix}`;
+  return `${money}${suffix}`;
 }
 
 function mapJoin<T extends string>(ids: T[], labels: Record<T, string>): string {
@@ -214,7 +211,7 @@ function Summary({ answers }: { answers: QuestionnaireAnswers }) {
     },
     {
       label: "Rough budget",
-      value: formatBudgetLine(answers.budget, answers.budgetCadence),
+      value: formatBudgetLine(answers.budgetAmountDollars, answers.budgetCadence),
     },
     {
       label: "Where you’ll get plants",
