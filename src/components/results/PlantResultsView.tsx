@@ -14,9 +14,12 @@ import {
 import { groupPlantsByZone, sortScoredPlants } from "@/lib/filterPlants";
 import { loadAndScorePlants } from "@/lib/plannerData";
 import { loadQuestionnaireAnswers } from "@/lib/localStorage";
+import { useMyListPlantIds } from "@/lib/useMyListPlantIds";
 import { PlantApiError } from "@/lib/plantApi";
+import { MyListProvider } from "./MyListProvider";
 import { PlantCard } from "./PlantCard";
 import { PlantResultsPrintTables } from "./PlantResultsPrintTables";
+import { ResultsMyPlan } from "./ResultsMyPlan";
 
 const ZONE_LABEL: Record<string, string> = {
   zone0: "Zone 0 — 0 to 5 ft",
@@ -32,6 +35,7 @@ const INITIAL_ZONE_EXPANDED: Record<DefensibleZoneId, boolean> = {
 
 export function PlantResultsView() {
   const router = useRouter();
+  const myListIds = useMyListPlantIds();
   const [answers, setAnswers] = useState<QuestionnaireAnswers | null>(null);
   /** Filtered/scored list from the API; sorting is applied in a memo (no re-fetch on sort change). */
   const [scoredPlants, setScoredPlants] = useState<ScoredPlant[]>([]);
@@ -89,6 +93,16 @@ export function PlantResultsView() {
 
   const grouped = useMemo(() => groupPlantsByZone(sortedPlants), [sortedPlants]);
 
+  const myPlanPlantsForPrint = useMemo(() => {
+    const byId = new Map(scoredPlants.map((p) => [p.id, p]));
+    const out: ScoredPlant[] = [];
+    for (const id of myListIds) {
+      const p = byId.get(id);
+      if (p) out.push(p);
+    }
+    return out;
+  }, [myListIds, scoredPlants]);
+
   if (!answers) {
     return (
       <div className="px-4 py-16 text-center text-sm text-[var(--muted)]">Loading your answers…</div>
@@ -96,8 +110,10 @@ export function PlantResultsView() {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-10 sm:px-6 lg:px-8 print:max-w-none print:px-2 print:py-3">
-      <header className="space-y-3 print:hidden">
+    <MyListProvider>
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-10 sm:px-6 lg:px-8 print:max-w-none print:px-2 print:py-3">
+        <ResultsMyPlan scoredPlants={scoredPlants} />
+        <header className="space-y-3 print:hidden">
         <p className="text-sm font-semibold uppercase tracking-wide text-[var(--accent-strong)]">
           Plant list
         </p>
@@ -130,7 +146,8 @@ export function PlantResultsView() {
             <li>
               Move the pointer off the card (or toggle with the keyboard) to return to the photo. Use{" "}
               <span className="text-[var(--foreground)]">Print / save as PDF</span> below for a compact
-              table.
+              table—if you have plants in <span className="text-[var(--foreground)]">My Plan</span>, the
+              printout lists those selections (otherwise all recommendations).
             </li>
           </ul>
         </div>
@@ -301,7 +318,7 @@ export function PlantResultsView() {
               );
             })}
           </div>
-          <PlantResultsPrintTables grouped={grouped} />
+          <PlantResultsPrintTables grouped={grouped} myPlanPlants={myPlanPlantsForPrint} />
         </>
       ) : null}
 
@@ -320,6 +337,7 @@ export function PlantResultsView() {
           Print / save as PDF
         </button>
       </div>
-    </div>
+      </div>
+    </MyListProvider>
   );
 }

@@ -1,3 +1,4 @@
+import { groupPlantsByZone } from "@/lib/filterPlants";
 import type { DefensibleZoneId, ScoredPlant } from "@/types";
 
 const ZONE_LABEL: Record<DefensibleZoneId, string> = {
@@ -33,19 +34,33 @@ function wildlifePrintCell(plant: ScoredPlant): string {
 
 export function PlantResultsPrintTables({
   grouped,
+  myPlanPlants,
 }: {
   grouped: Record<DefensibleZoneId, ScoredPlant[]>;
+  /** When non-empty, print/PDF uses these selections (My Plan) instead of the full recommendation set. */
+  myPlanPlants: ScoredPlant[];
 }) {
+  const printFromMyPlan = myPlanPlants.length > 0;
+  const groupedForPrint = printFromMyPlan ? groupPlantsByZone(myPlanPlants) : grouped;
+
   return (
     <div className="print-plant-report hidden space-y-5 print:block">
       <div className="print-report-heading">
         <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--muted)]">
           FireWise plant list
         </p>
-        <h1 className="text-base font-bold text-[var(--foreground)]">Recommended plants</h1>
+        <h1 className="text-base font-bold text-[var(--foreground)]">
+          {printFromMyPlan ? "My selected plants" : "Recommended plants"}
+        </h1>
+        {printFromMyPlan ? (
+          <p className="mt-1 max-w-[5.5in] text-[10px] leading-snug text-[var(--muted)]">
+            From your My Plan list — plants you chose for your property (print or save as PDF from the results
+            page).
+          </p>
+        ) : null}
       </div>
       {(["zone0", "zone1", "zone2"] as const).map((zone) => {
-        const list = grouped[zone];
+        const list = groupedForPrint[zone];
         if (!list.length) return null;
         return (
           <section key={zone} className="print-zone-section">

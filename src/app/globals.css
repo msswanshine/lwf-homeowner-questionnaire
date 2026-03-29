@@ -254,3 +254,64 @@ dialog.plant-detail-dialog button {
     transition: none;
   }
 }
+
+/* /results “My Plan”: full-viewport panel slides in from the right. */
+dialog.my-plan-dialog {
+  position: fixed;
+  inset: 0;
+  margin: 0;
+  max-width: none;
+  max-height: none;
+  width: 100%;
+  height: 100%;
+  border: none;
+  padding: 0;
+  background: transparent;
+  transform: translateX(100%);
+  transition: transform 0.38s ease;
+}
+
+dialog.my-plan-dialog[open] {
+  transform: translateX(0);
+}
+
+@starting-style {
+  dialog.my-plan-dialog[open] {
+    transform: translateX(100%);
+  }
+}
+
+dialog.my-plan-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.42);
+  opacity: 0;
+  transition: opacity 0.32s ease;
+}
+
+dialog.my-plan-dialog[open]::backdrop {
+  opacity: 1;
+}
+
+@starting-style {
+  dialog.my-plan-dialog[open]::backdrop {
+    opacity: 0;
+  }
+}
+
+dialog.my-plan-dialog button {
+  cursor: pointer;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  dialog.my-plan-dialog,
+  dialog.my-plan-dialog::backdrop {
+    transition: none !important;
+  }
+
+  dialog.my-plan-dialog[open] {
+    transform: translateX(0);
+  }
+
+  dialog.my-plan-dialog[open]::backdrop {
+    opacity: 1;
+  }
+}
