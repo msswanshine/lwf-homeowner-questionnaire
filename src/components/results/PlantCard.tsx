@@ -366,8 +366,14 @@ export const PlantCard = memo(function PlantCard({
           e.preventDefault();
           requestDialogClose();
         }}
+        onClick={(e) => {
+          if (e.target === e.currentTarget) requestDialogClose();
+        }}
       >
-        <div className="flex max-h-[min(85vh,640px)] flex-col overflow-hidden rounded-2xl bg-[var(--surface)]">
+        <div
+          className="plant-detail-dialog-panel flex max-h-[min(85vh,640px)] flex-col overflow-hidden rounded-2xl bg-[var(--surface)]"
+          onClick={(e) => e.stopPropagation()}
+        >
           <div className="border-b border-black/10 px-4 py-3">
             <h2 id={dialogTitleId} className="text-base font-semibold">
               {plant.commonName}
@@ -398,8 +404,12 @@ export const PlantCard = memo(function PlantCard({
               }
               disabled={onMyList && !fromMyPlan}
               onClick={() => {
-                if (fromMyPlan && onMyList) removePlantFromMyList(plant.id);
-                else addPlantToMyList(plant.id);
+                if (fromMyPlan && onMyList) {
+                  removePlantFromMyList(plant.id);
+                  return;
+                }
+                addPlantToMyList(plant.id);
+                requestDialogClose();
               }}
               aria-label={
                 onMyList
