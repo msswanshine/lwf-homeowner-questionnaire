@@ -89,4 +89,4 @@ Future phases may include accounts, neighborhood tooling, satellite planning, an
 
 ## License
 
-[MIT](LICENSE) — see [`LICENSE`](LICENSE) for the full text.
+Licensed under the [MIT License](LICENSE).
