@@ -2,6 +2,8 @@
 
 import { memo, useCallback, useEffect, useId, useRef, useState } from "react";
 import type { PlantValue, ScoredPlant } from "@/types";
+import { addPlantToMyList, removePlantFromMyList } from "@/lib/localStorage";
+import { useMyListIds } from "./MyListProvider";
 
 const PLACEHOLDER_IMAGE_SRC = "/plant-placeholder.png";
 
@@ -64,7 +66,14 @@ function tagClass(kind: "accent" | "muted") {
 const IMAGE_TEXT_GRADIENT =
   "linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.7) 28%, rgba(0,0,0,0.35) 55%, rgba(0,0,0,0.08) 78%, transparent 100%)";
 
-export const PlantCard = memo(function PlantCard({ plant }: { plant: ScoredPlant }) {
+export const PlantCard = memo(function PlantCard({
+  plant,
+  fromMyPlan = false,
+}: {
+  plant: ScoredPlant;
+  /** When true (My Plan panel only), saved plants show Remove instead of disabled Added. */
+  fromMyPlan?: boolean;
+}) {
   const titleId = useId();
   const dialogTitleId = useId();
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -74,8 +83,14 @@ export const PlantCard = memo(function PlantCard({ plant }: { plant: ScoredPlant
   const [hover, setHover] = useState(false);
   const [kbdFlip, setKbdFlip] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
+  const myListIds = useMyListIds();
+  const onMyList = myListIds.includes(plant.id);
 
   const showBack = hover || kbdFlip || modalOpen;
+
+  const openDetailModal = useCallback(() => {
+    setModalOpen(true);
+  }, []);
 
   const imageUrl = plant.primaryImage?.url ?? plant.images?.[0]?.url;
   const otherTags = (plant.otherWildlifeTags ?? []).filter((t) => !isJunkDisplayText(t));
@@ -221,7 +236,33 @@ export const PlantCard = memo(function PlantCard({ plant }: { plant: ScoredPlant
           {/* Back — summary + Learn more opens modal */}
           <div className="plant-card-face plant-card-face--back flex flex-col rounded-xl border border-black/10 bg-white p-3 shadow-inner">
             <div className="min-h-0 flex-1 space-y-2 overflow-y-auto">
-              <h3 className="text-sm font-semibold text-[var(--foreground)]">{plant.commonName}</h3>
+              <div className="flex items-start justify-between gap-2">
+                <h3 className="min-w-0 flex-1 text-sm font-semibold leading-snug text-[var(--foreground)]">
+                  {plant.commonName}
+                </h3>
+                <button
+                  type="button"
+                  className={
+                    fromMyPlan && onMyList
+                      ? "inline-flex min-h-9 shrink-0 items-center justify-center rounded-full border border-rose-300 bg-white px-3 text-xs font-semibold text-rose-800 shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-700"
+                      : "inline-flex min-h-9 shrink-0 items-center justify-center rounded-full border border-black/15 bg-white px-3 text-xs font-semibold text-[var(--accent-strong)] shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent-strong)] disabled:cursor-not-allowed disabled:border-black/10 disabled:bg-[var(--surface-2)] disabled:text-[var(--muted)]"
+                  }
+                  disabled={onMyList && !fromMyPlan}
+                  onClick={() => {
+                    if (fromMyPlan && onMyList) removePlantFromMyList(plant.id);
+                    else addPlantToMyList(plant.id);
+                  }}
+                  aria-label={
+                    onMyList
+                      ? fromMyPlan
+                        ? `Remove ${plant.commonName} from your list`
+                        : `${plant.commonName} is already on your list`
+                      : `Add ${plant.commonName} to your list`
+                  }
+                >
+                  {onMyList ? (fromMyPlan ? "Remove" : "Added") : "Add"}
+                </button>
+              </div>
               <p className="text-xs italic text-[var(--muted)]">
                 {plant.genus} {plant.species}
                 {plant.subspeciesVarieties ? ` ${plant.subspeciesVarieties}` : ""}
@@ -287,7 +328,7 @@ export const PlantCard = memo(function PlantCard({ plant }: { plant: ScoredPlant
               ref={learnMoreRef}
               type="button"
               className="mt-2 inline-flex min-h-11 w-full shrink-0 items-center justify-center rounded-full border border-black/10 bg-[var(--surface)] px-3 text-xs font-semibold text-[var(--accent-strong)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent-strong)]"
-              onClick={() => setModalOpen(true)}
+              onClick={openDetailModal}
             >
               Learn more
             </button>
@@ -326,10 +367,32 @@ export const PlantCard = memo(function PlantCard({ plant }: { plant: ScoredPlant
               ))}
             </ul>
           </div>
-          <div className="border-t border-black/10 p-3">
+          <div className="flex flex-col gap-2 border-t border-black/10 p-3">
             <button
               type="button"
-              className="inline-flex min-h-11 w-full items-center justify-center rounded-full bg-[var(--accent)] px-4 text-sm font-semibold text-white"
+              className={
+                fromMyPlan && onMyList
+                  ? "inline-flex min-h-11 w-full items-center justify-center rounded-full border border-rose-300 bg-white px-4 text-sm font-semibold text-rose-900 shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-700"
+                  : "inline-flex min-h-11 w-full items-center justify-center rounded-full border border-black/15 bg-white px-4 text-sm font-semibold text-[var(--foreground)] shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent-strong)] disabled:cursor-not-allowed disabled:border-black/10 disabled:bg-[var(--surface-2)] disabled:text-[var(--muted)]"
+              }
+              disabled={onMyList && !fromMyPlan}
+              onClick={() => {
+                if (fromMyPlan && onMyList) removePlantFromMyList(plant.id);
+                else addPlantToMyList(plant.id);
+              }}
+              aria-label={
+                onMyList
+                  ? fromMyPlan
+                    ? `Remove ${plant.commonName} from your list`
+                    : `${plant.commonName} is on your list`
+                  : `Add ${plant.commonName} to your planting list`
+              }
+            >
+              {onMyList ? (fromMyPlan ? "Remove" : "On your list") : "Add To Planting List!"}
+            </button>
+            <button
+              type="button"
+              className="inline-flex min-h-11 w-full items-center justify-center rounded-full bg-[var(--accent)] px-4 text-sm font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent-strong)]"
               onClick={requestDialogClose}
             >
               Close

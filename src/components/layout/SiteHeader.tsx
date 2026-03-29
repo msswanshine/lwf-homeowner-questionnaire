@@ -1,11 +1,11 @@
 import Link from "next/link";
+import { HeaderMyPlanNavButton } from "./HeaderMyPlanNavButton";
 
 const links = [
   { href: "/", label: "Home" },
   { href: "/questionnaire", label: "Questionnaire" },
   { href: "/results", label: "Plant list" },
   { href: "/action-plan", label: "Action plan" },
-  { href: "/about", label: "About" },
 ] as const;
 
 export function SiteHeader() {
@@ -21,7 +21,7 @@ export function SiteHeader() {
             <p className="text-xs text-[var(--muted)]">Pacific Northwest homeowner MVP</p>
           </div>
         </div>
-        <nav aria-label="Primary" className="flex flex-wrap gap-2 sm:justify-end">
+        <nav aria-label="Primary" className="flex flex-wrap items-center gap-2 sm:justify-end">
           {links.map((l) => (
             <Link
               key={l.href}
@@ -31,6 +31,7 @@ export function SiteHeader() {
               {l.label}
             </Link>
           ))}
+          <HeaderMyPlanNavButton />
         </nav>
       </div>
     </header>
