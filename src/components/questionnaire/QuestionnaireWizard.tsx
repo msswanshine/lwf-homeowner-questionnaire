@@ -13,6 +13,12 @@ import { validateQuestionnaireStep, type StepErrors } from "./validation";
 
 const TOTAL_STEPS = 8;
 
+function scrollWizardToTop() {
+  if (typeof window === "undefined") return;
+  const smooth = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  window.scrollTo({ top: 0, left: 0, behavior: smooth ? "smooth" : "auto" });
+}
+
 function formatCadence(c: QuestionnaireAnswers["budgetCadence"]): string {
   if (c === "perMonth") return "per month";
   if (c === "perYear") return "per year";
@@ -23,7 +29,15 @@ function formatCadence(c: QuestionnaireAnswers["budgetCadence"]): string {
 function Summary({ answers }: { answers: QuestionnaireAnswers }) {
   const rows: { label: string; value: string }[] = [
     { label: "Lot size", value: answers.propertySize ?? "—" },
-    { label: "Planting space near home", value: answers.nearHomePlantingSpace ?? "—" },
+    {
+      label: "Ashland area (city plant rules)",
+      value:
+        answers.ashlandAreaResident === null
+          ? "—"
+          : answers.ashlandAreaResident
+            ? "Yes — Ashland catalog filter on"
+            : "No — elsewhere in region",
+    },
     { label: "ZIP (lookup)", value: answers.addressZip.trim() || "—" },
     { label: "USDA zone", value: answers.usdaZone ?? "—" },
     { label: "Defensible zones", value: answers.defensibleZones.join(", ") || "—" },
@@ -105,6 +119,7 @@ export function QuestionnaireWizard() {
       }
       setErrors({});
       setStep((s) => s + 1);
+      scrollWizardToTop();
       return;
     }
     for (let i = 0; i < TOTAL_STEPS; i++) {
@@ -112,6 +127,7 @@ export function QuestionnaireWizard() {
       if (Object.keys(partial).length > 0) {
         setStep(i);
         setErrors(partial);
+        scrollWizardToTop();
         return;
       }
     }

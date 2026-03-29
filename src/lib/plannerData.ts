@@ -12,7 +12,7 @@ import {
 import { filterAndScorePlants, sortScoredPlants } from "@/lib/filterPlants";
 import { PlantApiError } from "@/lib/plantApi";
 
-/** Must stay aligned with `PLANNER_CATALOG_OPTIONS` in `app/api/planner-catalog/route.ts`. */
+/** Planner payload size matches `PLANNER_CATALOG_OPTIONS` in `app/api/planner-catalog/route.ts`. */
 const PLANNER_CATALOG_PATH = "/api/planner-catalog";
 
 async function fetchPlannerCatalogDetails(): Promise<PlantDetail[]> {

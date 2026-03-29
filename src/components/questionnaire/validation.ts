@@ -11,9 +11,9 @@ export function validateQuestionnaireStep(
   switch (step) {
     case 0:
       if (!answers.propertySize) errors.propertySize = "Choose a property size.";
-      if (!answers.nearHomePlantingSpace) {
-        errors.nearHomePlantingSpace =
-          "Estimate how much planted space you have close to the home.";
+      if (answers.ashlandAreaResident === null) {
+        errors.ashlandAreaResident =
+          "Say whether you live in the Ashland area (City of Ashland plant rules).";
       }
       if (!answers.usdaZone) errors.usdaZone = "Select or look up your USDA zone.";
       if (answers.defensibleZones.length === 0) {

@@ -3,9 +3,10 @@ import { unstable_cache } from "next/cache";
 import type { PlantDetail } from "@/types";
 import { loadPlantsForPlanning } from "@/lib/plantApi";
 
-/** Keep in sync with {@link DEFAULT_PLANNER_OPTIONS} in plannerData.ts (invalidates CDN/cache when tuning). */
+/** Keep in sync with {@link PLANNER_CATALOG_PATH} usage in plannerData.ts (invalidates CDN/cache when tuning). */
 const PLANNER_CATALOG_OPTIONS = {
-  maxPlants: 120,
+  /** Larger slice so Ashland-area filtering still leaves enough candidates after exclusions. */
+  maxPlants: 400,
   listPageSize: 40,
   /** /values/bulk plantIds=… chunk size (URL length vs. row limit per request). */
   bulkPlantChunkSize: 80,
@@ -13,7 +14,7 @@ const PLANNER_CATALOG_OPTIONS = {
   bulkValueRowLimit: 50_000,
 } as const;
 
-const CACHE_TAG = "planner-catalog-v2-bulk-values";
+const CACHE_TAG = "planner-catalog-v4-400-plants";
 
 async function loadCatalogUncached(): Promise<PlantDetail[]> {
   return loadPlantsForPlanning({

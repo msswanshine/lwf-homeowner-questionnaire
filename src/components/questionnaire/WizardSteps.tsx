@@ -10,7 +10,6 @@ import type {
   Irrigation,
   LightPreferenceId,
   MaintenanceTime,
-  NearHomePlantingSpace,
   PhysicalAbility,
   PollinatorImportance,
   PropertySize,
@@ -137,27 +136,46 @@ export function renderQuestionnaireStep(
           </section>
 
           <section className="space-y-3">
-            <h2 className="text-lg font-semibold text-[var(--foreground)]">
-              Room for plants near the house
-            </h2>
-            <p className="text-sm text-[var(--muted)]">
-              Think about planting beds, side yards, and strips you actually want to plant—not total lot
-              size. This pairs with defensible-space zones below.
-            </p>
-            <select
-              className="w-full rounded-lg border border-black/15 bg-white px-3 py-3 text-base shadow-sm"
-              value={answers.nearHomePlantingSpace ?? ""}
-              onChange={(e) =>
-                patch("nearHomePlantingSpace", (e.target.value || null) as NearHomePlantingSpace | null)
-              }
-              aria-invalid={Boolean(errors.nearHomePlantingSpace)}
+            <fieldset
+              className="space-y-3 rounded-xl border border-black/10 bg-white p-4 shadow-sm"
+              aria-required="true"
             >
-              <option value="">How much planted space is near the home?</option>
-              <option value="tight">Tight — mostly foundation strips or narrow beds</option>
-              <option value="moderate">Moderate — several beds OR side yards with room</option>
-              <option value="spacious">Spacious — large beds or multiple planting areas close in</option>
-            </select>
-            <FieldError message={errors.nearHomePlantingSpace} />
+              <legend className="text-lg font-semibold text-[var(--foreground)]">
+                Do you live in the Ashland area?
+              </legend>
+              <p className="text-sm text-[var(--muted)]">
+                City of Ashland has its own wildfire–landscape plant restrictions in the Living with Fire
+                catalog—separate from the wider Rogue Valley. If you answer{" "}
+                <span className="text-[var(--foreground)]">yes</span>, we apply those{" "}
+                <span className="text-[var(--foreground)]">Ashland</span> tags and drop plants flagged as
+                noxious weeds, major invasives, or similar hard prohibitions (placement codes like P10 or P30
+                still appear on cards). If you live elsewhere in the valley, choose{" "}
+                <span className="text-[var(--foreground)]">no</span> for the broader regional list.
+              </p>
+              <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+                <label className="flex cursor-pointer gap-3 rounded-lg border border-black/10 bg-[var(--surface)] px-4 py-3">
+                  <input
+                    type="checkbox"
+                    checked={answers.ashlandAreaResident === true}
+                    onChange={(e) => patch("ashlandAreaResident", e.target.checked ? true : null)}
+                    className="mt-1 size-5 rounded border border-black/20 accent-[var(--accent)]"
+                    aria-invalid={Boolean(errors.ashlandAreaResident)}
+                  />
+                  <span className="font-medium text-[var(--foreground)]">Yes — Ashland area (city rules apply)</span>
+                </label>
+                <label className="flex cursor-pointer gap-3 rounded-lg border border-black/10 bg-[var(--surface)] px-4 py-3">
+                  <input
+                    type="checkbox"
+                    checked={answers.ashlandAreaResident === false}
+                    onChange={(e) => patch("ashlandAreaResident", e.target.checked ? false : null)}
+                    className="mt-1 size-5 rounded border border-black/20 accent-[var(--accent)]"
+                    aria-invalid={Boolean(errors.ashlandAreaResident)}
+                  />
+                  <span className="font-medium text-[var(--foreground)]">No — I live elsewhere</span>
+                </label>
+              </div>
+            </fieldset>
+            <FieldError message={errors.ashlandAreaResident} />
           </section>
 
           <section className="space-y-3">

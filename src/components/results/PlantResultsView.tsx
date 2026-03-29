@@ -106,6 +106,14 @@ export function PlantResultsView() {
           Filtered from the Living with Fire catalog for your zones, water posture, and maintenance
           capacity. Fire performance stays primary—tweak sort order to explore tradeoffs.
         </p>
+        {answers.ashlandAreaResident ? (
+          <p className="max-w-3xl rounded-xl border border-amber-200/80 bg-amber-50/90 px-4 py-3 text-sm text-[var(--foreground)]">
+            <span className="font-semibold text-amber-900">Ashland-area filter is on.</span>{" "}
+            You indicated you live in the Ashland area, so we apply City of Ashland program rules from the
+            catalog (a much smaller eligible set than the wider Rogue Valley or region). Counts also reflect
+            our planner sample and your other answers—not the entire database.
+          </p>
+        ) : null}
         <div className="max-w-3xl rounded-2xl border border-black/10 bg-[var(--accent-soft)]/50 px-4 py-3 text-sm text-[var(--foreground)]">
           <p className="font-semibold text-[var(--accent-strong)]">How to use the plant cards</p>
           <ul className="mt-2 list-inside list-disc space-y-1 text-[var(--muted)]">

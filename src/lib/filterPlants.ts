@@ -32,6 +32,8 @@ const ATTR = {
   benefits: "Benefits",
   deerResistance: "Deer Resistance",
   growthListChoice: "Growth List Choice",
+  /** City of Ashland program tags (NW, Weed, PH, …). */
+  ashland: "Ashland",
   minMatureHeight: "Min Mature Height",
   maxMatureHeight: "Max Mature Height",
   minMatureWidth: "Min Mature Width",
@@ -407,6 +409,27 @@ function shouldExcludeForFirePriority(user: QuestionnaireAnswers, scores: number
 }
 
 /**
+ * Ashland-area residents: exclude plants with hard Ashland prohibitions (noxious weed, invasive, harmful).
+ * These rules apply to the City of Ashland program, not necessarily elsewhere in the Rogue Valley. The full
+ * LWF catalog under Ashland-style rules is ~hundreds of species vs thousands regionally; this app applies the
+ * same checks to whatever catalog slice the planner loaded. Placement codes (P10, P30, …) are not excluded
+ * here—Character Score / zones handle spacing.
+ */
+function hasAshlandHardProhibition(plant: PlantDetail): boolean {
+  const vals = valuesFor(plant, ATTR.ashland);
+  if (vals.length === 0) return false;
+  for (const raw of vals) {
+    const u = raw.trim().toUpperCase();
+    if (u === "NW" || u === "WEED" || u === "PH") return true;
+    const lower = raw.toLowerCase();
+    if (lower.includes("noxious")) return true;
+    if (lower.includes("harmful to humans")) return true;
+    if (lower.includes("invasive") && lower.includes("several")) return true;
+  }
+  return false;
+}
+
+/**
  * Filters and scores plants for the results experience.
  */
 export function filterAndScorePlants(
@@ -424,6 +447,7 @@ export function filterAndScorePlants(
     if (!lightMatches(answers, plant)) continue;
     if (!pollinatorMatches(answers, plant)) continue;
     if (!deerMatches(answers, plant)) continue;
+    if (answers.ashlandAreaResident === true && hasAshlandHardProhibition(plant)) continue;
 
     const fireResistance = fireLabelFromScores(listScores);
     const fireScore = listScores.length ? Math.max(...listScores) : 2;

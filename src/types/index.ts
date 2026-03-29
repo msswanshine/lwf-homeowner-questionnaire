@@ -57,9 +57,6 @@ export type TopPriority =
   | "water"
   | "budget";
 
-/** Usable planted area immediately around the home (complements defensible zones). */
-export type NearHomePlantingSpace = "tight" | "moderate" | "spacious";
-
 /** Maps to API Light Needs display names. */
 export type LightPreferenceId = "fullSun" | "partSunShade" | "shade";
 
@@ -73,7 +70,11 @@ export interface QuestionnaireAnswers {
   /** ZIP (5 digits) for USDA lookup; optional. */
   addressZip: string;
   usdaZone: UsdaZone | null;
-  nearHomePlantingSpace: NearHomePlantingSpace | null;
+  /**
+   * City of Ashland–area plant rules (LWF "Ashland" attribute)—not the whole Rogue Valley.
+   * null = not yet answered (step 0 required).
+   */
+  ashlandAreaResident: boolean | null;
   defensibleZones: DefensibleZoneId[];
   irrigation: Irrigation | null;
   waterPreference: WaterPreference | null;
