@@ -9,7 +9,7 @@ export function createEmptyAnswers(): QuestionnaireAnswers {
     propertySize: null,
     addressZip: "",
     usdaZone: null,
-    nearHomePlantingSpace: null,
+    ashlandAreaResident: null,
     defensibleZones: [],
     irrigation: null,
     waterPreference: null,
@@ -35,6 +35,10 @@ export function createEmptyAnswers(): QuestionnaireAnswers {
 
 type RawStored = Partial<QuestionnaireAnswers> & {
   topPriority?: TopPriority | null;
+  /** Renamed to ashlandAreaResident; kept for localStorage migration. */
+  rogueValleyResident?: boolean | null;
+  /** Removed from questionnaire; stripped when loading legacy saves. */
+  nearHomePlantingSpace?: unknown;
 };
 
 /**
@@ -54,9 +58,20 @@ export function normalizeQuestionnaireAnswers(raw: unknown): QuestionnaireAnswer
     priorities = [legacySingle];
   }
 
+  const ashlandAreaResident =
+    typeof p.ashlandAreaResident === "boolean"
+      ? p.ashlandAreaResident
+      : typeof p.rogueValleyResident === "boolean"
+        ? p.rogueValleyResident
+        : base.ashlandAreaResident;
+
+  delete p.rogueValleyResident;
+  delete p.nearHomePlantingSpace;
+
   return {
     ...base,
     ...p,
+    ashlandAreaResident,
     addressZip: typeof p.addressZip === "string" ? p.addressZip : base.addressZip,
     defensibleZones: Array.isArray(p.defensibleZones) ? p.defensibleZones : base.defensibleZones,
     lightPreferences: Array.isArray(p.lightPreferences) ? p.lightPreferences : base.lightPreferences,

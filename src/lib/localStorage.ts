@@ -7,7 +7,7 @@ import { normalizeQuestionnaireAnswers } from "@/lib/questionnaireState";
 
 const KEYS = {
   answers: "fw.questionnaire.answers.v1",
-  results: "fw.questionnaire.results.v7",
+  results: "fw.questionnaire.results.v8",
   tasks: "fw.actionplan.tasks.v1",
 } as const;
 

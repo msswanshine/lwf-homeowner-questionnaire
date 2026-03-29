@@ -10,7 +10,6 @@ import type {
   Irrigation,
   LightPreferenceId,
   MaintenanceTime,
-  NearHomePlantingSpace,
   PhysicalAbility,
   PollinatorImportance,
   PropertySize,
@@ -86,21 +85,21 @@ function budgetTierOptions(cadence: BudgetCadence | null): { value: BudgetTier; 
 const PRIORITY_CHOICES: { id: TopPriority; label: string; hint: string }[] = [
   {
     id: "fireSafety",
-    label: "Fire safety",
-    hint: "Prioritize lowest ignition risk and defensible-space fit.",
+    label: "Fire safety comes first",
+    hint: "I want plants that are safer if a fire gets close to the house.",
   },
-  { id: "aesthetics", label: "Looks & layout", hint: "Prioritize form, bloom, and overall style." },
+  { id: "aesthetics", label: "How it looks", hint: "I care a lot about pretty flowers, shapes, and style." },
   {
     id: "lowMaintenance",
-    label: "Low maintenance",
-    hint: "Favor simpler care and less pruning.",
+    label: "Easy to take care of",
+    hint: "I don’t want plants that need tons of trimming and fuss.",
   },
   {
     id: "water",
-    label: "Water conservation",
-    hint: "Favor drought-tolerant and efficient water use.",
+    label: "Saving water",
+    hint: "I want plants that don’t need a lot of watering.",
   },
-  { id: "budget", label: "Budget", hint: "Favor cost-conscious sequencing and plant choices." },
+  { id: "budget", label: "Saving money", hint: "I need to keep costs sensible." },
 ];
 
 export function renderQuestionnaireStep(
@@ -116,10 +115,12 @@ export function renderQuestionnaireStep(
     case 0:
       return (
         <div className="space-y-8">
+          <p className="text-sm font-medium text-[var(--accent-strong)]">Your place</p>
           <section className="space-y-3">
-            <h2 className="text-lg font-semibold text-[var(--foreground)]">Overall lot size</h2>
+            <h2 className="text-lg font-semibold text-[var(--foreground)]">How big is your yard?</h2>
             <p className="text-sm text-[var(--muted)]">
-              Rough acreage helps us scale how many plant options make sense.
+              Not exact science—just so we don’t suggest a zillion plants for a tiny lot (or too few for a
+              huge one).
             </p>
             <select
               className="w-full rounded-lg border border-black/15 bg-white px-3 py-3 text-base shadow-sm"
@@ -127,49 +128,65 @@ export function renderQuestionnaireStep(
               onChange={(e) => patch("propertySize", (e.target.value || null) as PropertySize | null)}
               aria-invalid={Boolean(errors.propertySize)}
             >
-              <option value="">Select lot size…</option>
-              <option value="small">Small (&lt;0.25 acre)</option>
-              <option value="medium">Medium (0.25–0.5 acre)</option>
-              <option value="large">Large (0.5–1 acre)</option>
-              <option value="veryLarge">Very large (1+ acre)</option>
+              <option value="">Pick one…</option>
+              <option value="small">Pretty small (about under 1/4 acre)</option>
+              <option value="medium">Medium (about 1/4 to 1/2 acre)</option>
+              <option value="large">Large (about 1/2 to 1 acre)</option>
+              <option value="veryLarge">Really big (about 1 acre or more)</option>
             </select>
             <FieldError message={errors.propertySize} />
           </section>
 
           <section className="space-y-3">
-            <h2 className="text-lg font-semibold text-[var(--foreground)]">
-              Room for plants near the house
-            </h2>
-            <p className="text-sm text-[var(--muted)]">
-              Think about planting beds, side yards, and strips you actually want to plant—not total lot
-              size. This pairs with defensible-space zones below.
-            </p>
-            <select
-              className="w-full rounded-lg border border-black/15 bg-white px-3 py-3 text-base shadow-sm"
-              value={answers.nearHomePlantingSpace ?? ""}
-              onChange={(e) =>
-                patch("nearHomePlantingSpace", (e.target.value || null) as NearHomePlantingSpace | null)
-              }
-              aria-invalid={Boolean(errors.nearHomePlantingSpace)}
+            <fieldset
+              className="space-y-3 rounded-xl border border-black/10 bg-white p-4 shadow-sm"
+              aria-required="true"
             >
-              <option value="">How much planted space is near the home?</option>
-              <option value="tight">Tight — mostly foundation strips or narrow beds</option>
-              <option value="moderate">Moderate — several beds OR side yards with room</option>
-              <option value="spacious">Spacious — large beds or multiple planting areas close in</option>
-            </select>
-            <FieldError message={errors.nearHomePlantingSpace} />
+              <legend className="text-lg font-semibold text-[var(--foreground)]">
+                Do you live in the Ashland area?
+              </legend>
+              <p className="text-sm text-[var(--muted)]">
+                Ashland has <span className="text-[var(--foreground)]">extra plant rules</span> to help
+                with wildfire safety. If you live there, say yes—we’ll hide plants the rules say “no way”
+                to (like nasty weeds or super-risky ones). If you don’t live in Ashland, say no and we’ll
+                use the bigger list for your part of the region.
+              </p>
+              <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+                <label className="flex cursor-pointer gap-3 rounded-lg border border-black/10 bg-[var(--surface)] px-4 py-3">
+                  <input
+                    type="checkbox"
+                    checked={answers.ashlandAreaResident === true}
+                    onChange={(e) => patch("ashlandAreaResident", e.target.checked ? true : null)}
+                    className="mt-1 size-5 rounded border border-black/20 accent-[var(--accent)]"
+                    aria-invalid={Boolean(errors.ashlandAreaResident)}
+                  />
+                  <span className="font-medium text-[var(--foreground)]">Yes, I live in Ashland</span>
+                </label>
+                <label className="flex cursor-pointer gap-3 rounded-lg border border-black/10 bg-[var(--surface)] px-4 py-3">
+                  <input
+                    type="checkbox"
+                    checked={answers.ashlandAreaResident === false}
+                    onChange={(e) => patch("ashlandAreaResident", e.target.checked ? false : null)}
+                    className="mt-1 size-5 rounded border border-black/20 accent-[var(--accent)]"
+                    aria-invalid={Boolean(errors.ashlandAreaResident)}
+                  />
+                  <span className="font-medium text-[var(--foreground)]">Nope, I live somewhere else</span>
+                </label>
+              </div>
+            </fieldset>
+            <FieldError message={errors.ashlandAreaResident} />
           </section>
 
           <section className="space-y-3">
-            <h2 className="text-lg font-semibold text-[var(--foreground)]">USDA hardiness zone</h2>
+            <h2 className="text-lg font-semibold text-[var(--foreground)]">How cold does it get where you are?</h2>
             <p className="text-sm text-[var(--muted)]">
-              Enter a WA, OR, or ID ZIP for a rough zone suggestion (approximate), then confirm or adjust
-              the zone.
+              Landscapers call this your “hardiness zone.” Type your ZIP if you’re in Washington, Oregon,
+              or Idaho—we’ll guess a zone (close, not perfect). Then pick the zone that matches you.
             </p>
             <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
               <div className="min-w-0 flex-1">
                 <label className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
-                  ZIP code
+                  Your ZIP code
                 </label>
                 <input
                   type="text"
@@ -191,15 +208,17 @@ export function renderQuestionnaireStep(
                   const z = lookupZoneFromZip(answers.addressZip);
                   if (z) {
                     patch("usdaZone", z);
-                    setZipHint(`Suggested Zone ${z} from ZIP (approximate for PNW). You can override below.`);
+                    setZipHint(
+                      `We think you’re around Zone ${z}. If that sounds wrong, just pick a different zone below.`,
+                    );
                   } else {
                     setZipHint(
-                      "Could not map this ZIP — pick your zone manually, or check you entered five digits (WA/OR/ID coverage).",
+                      "We couldn’t guess from that ZIP—use 5 digits, and for now we only auto-guess in WA, OR, and ID. Or just pick your zone yourself below.",
                     );
                   }
                 }}
               >
-                Look up zone
+                Guess zone from ZIP
               </button>
             </div>
             {zipHint ? (
@@ -213,7 +232,7 @@ export function renderQuestionnaireStep(
               onChange={(e) => patch("usdaZone", (e.target.value || null) as UsdaZone | null)}
               aria-invalid={Boolean(errors.usdaZone)}
             >
-              <option value="">Select zone…</option>
+              <option value="">Pick your zone…</option>
               {(["5", "6", "7", "8", "9"] as const).map((z) => (
                 <option key={z} value={z}>
                   Zone {z}
@@ -224,13 +243,19 @@ export function renderQuestionnaireStep(
           </section>
 
           <section className="space-y-3">
-            <h2 className="text-lg font-semibold text-[var(--foreground)]">
-              Defensible space zones you’re working on
-            </h2>
+            <h2 className="text-lg font-semibold text-[var(--foreground)]">Defensible space zones</h2>
             <p className="text-sm text-[var(--muted)]">
               Zone 0 hugs the home, Zone 1 is the lean, clean, green ring, and Zone 2 extends farther out.
               Select every zone you are actively planning—this is the “room around the house” from a fire
-              perspective.
+              perspective.{" "}
+              <a
+                href="https://wfca.com/wildfire-articles/firewise-defensible-space/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-semibold text-[var(--accent-strong)] underline-offset-4 hover:underline"
+              >
+                More about Firewise defensible space (opens in new tab)
+              </a>
             </p>
             <div className="grid gap-3">
               {(
@@ -320,19 +345,18 @@ export function renderQuestionnaireStep(
     case 2:
       return (
         <div className="space-y-8">
-          <p className="text-sm font-medium text-[var(--accent-strong)]">Site conditions</p>
+          <p className="text-sm font-medium text-[var(--accent-strong)]">Sun, bees, and deer</p>
           <section className="space-y-3">
-            <h2 className="text-lg font-semibold text-[var(--foreground)]">Sun and shade</h2>
+            <h2 className="text-lg font-semibold text-[var(--foreground)]">Is it sunny or shady where you’ll plant?</h2>
             <p className="text-sm text-[var(--muted)]">
-              Where are you planting? Pick every pattern that applies (e.g. full sun front yard + shade
-              side yard).
+              Check every one that fits—like “sunny in front, shady on the side.”
             </p>
             <div className="grid gap-3 sm:grid-cols-2">
               {(
                 [
-                  { id: "fullSun" as const, title: "Mostly full sun (6+ hrs)" },
-                  { id: "partSunShade" as const, title: "Mixed sun / part shade" },
-                  { id: "shade" as const, title: "Shade or afternoon shade" },
+                  { id: "fullSun" as const, title: "Lots of sun most of the day" },
+                  { id: "partSunShade" as const, title: "Some sun, some shade" },
+                  { id: "shade" as const, title: "Pretty shady (or shady in the afternoon)" },
                 ] satisfies { id: LightPreferenceId; title: string }[]
               ).map((item) => {
                 const checked = answers.lightPreferences.includes(item.id);
@@ -354,7 +378,7 @@ export function renderQuestionnaireStep(
             <FieldError message={errors.lightPreferences} />
           </section>
           <section className="space-y-3">
-            <h2 className="text-lg font-semibold text-[var(--foreground)]">Pollinators & habitat</h2>
+            <h2 className="text-lg font-semibold text-[var(--foreground)]">Do you want plants that help bees, butterflies, and other pollinators?</h2>
             <select
               className="w-full rounded-lg border border-black/15 bg-white px-3 py-3 text-base shadow-sm"
               value={answers.pollinatorImportance ?? ""}
@@ -366,15 +390,15 @@ export function renderQuestionnaireStep(
               }
               aria-invalid={Boolean(errors.pollinatorImportance)}
             >
-              <option value="">How important is pollinator-friendly planting?</option>
-              <option value="notImportant">Not a focus right now</option>
-              <option value="nice">Nice to have</option>
-              <option value="high">High priority</option>
+              <option value="">Pick one…</option>
+              <option value="notImportant">Not really thinking about that</option>
+              <option value="nice">Yeah, that’d be cool if it happens</option>
+              <option value="high">Big yes! I want to help pollinators on purpose</option>
             </select>
             <FieldError message={errors.pollinatorImportance} />
           </section>
           <section className="space-y-3">
-            <h2 className="text-lg font-semibold text-[var(--foreground)]">Deer</h2>
+            <h2 className="text-lg font-semibold text-[var(--foreground)]">Is your yard a deer buffet?</h2>
             <select
               className="w-full rounded-lg border border-black/15 bg-white px-3 py-3 text-base shadow-sm"
               value={answers.deerResistance ?? ""}
@@ -383,10 +407,10 @@ export function renderQuestionnaireStep(
               }
               aria-invalid={Boolean(errors.deerResistance)}
             >
-              <option value="">How much do you need deer resistance?</option>
-              <option value="notImportant">Not an issue in my yard</option>
-              <option value="prefer">Prefer deer-resistant when possible</option>
-              <option value="must">Must be highly deer resistant</option>
+              <option value="">Pick one…</option>
+              <option value="notImportant">Deer aren’t really a thing here</option>
+              <option value="prefer">Sometimes—I’d like deer-safe plants when we can</option>
+              <option value="must">Yes, and I need plants they usually leave alone</option>
             </select>
             <FieldError message={errors.deerResistance} />
           </section>
@@ -395,9 +419,12 @@ export function renderQuestionnaireStep(
     case 3:
       return (
         <div className="space-y-8">
-          <p className="text-sm font-medium text-[var(--accent-strong)]">Maintenance level</p>
+          <p className="text-sm font-medium text-[var(--accent-strong)]">Time and your body</p>
           <section className="space-y-3">
-            <h2 className="text-lg font-semibold text-[var(--foreground)]">Time for garden care</h2>
+            <h2 className="text-lg font-semibold text-[var(--foreground)]">
+              How much time do you want to spend in the yard each month?
+            </h2>
+            <p className="text-sm text-[var(--muted)]">Just a guess is fine—not a contract.</p>
             <select
               className="w-full rounded-lg border border-black/15 bg-white px-3 py-3 text-base shadow-sm"
               value={answers.maintenanceTime ?? ""}
@@ -406,16 +433,19 @@ export function renderQuestionnaireStep(
               }
               aria-invalid={Boolean(errors.maintenanceTime)}
             >
-              <option value="">How much time monthly?</option>
-              <option value="veryLow">Very low (&lt;1 hr/month)</option>
-              <option value="low">Low (1–2 hrs/month)</option>
-              <option value="moderate">Moderate (2–4 hrs/month)</option>
-              <option value="high">High (4+ hrs/month)</option>
+              <option value="">Pick one…</option>
+              <option value="veryLow">Almost none—like under an hour a month</option>
+              <option value="low">A little—about 1–2 hours a month</option>
+              <option value="moderate">Some—about 2–4 hours a month</option>
+              <option value="high">I’m out there a lot—4+ hours a month</option>
             </select>
             <FieldError message={errors.maintenanceTime} />
           </section>
           <section className="space-y-3">
-            <h2 className="text-lg font-semibold text-[var(--foreground)]">Physical comfort</h2>
+            <h2 className="text-lg font-semibold text-[var(--foreground)]">Anything physical limitations we should know?</h2>
+            <p className="text-sm text-[var(--muted)]">
+              So we don’t only suggest plants that need you on a tall ladder or crawling on your knees.
+            </p>
             <select
               className="w-full rounded-lg border border-black/15 bg-white px-3 py-3 text-base shadow-sm"
               value={answers.physicalAbility ?? ""}
@@ -424,10 +454,10 @@ export function renderQuestionnaireStep(
               }
               aria-invalid={Boolean(errors.physicalAbility)}
             >
-              <option value="">Accessibility preferences…</option>
-              <option value="none">No restrictions</option>
-              <option value="lowHeight">Prefer low-height work</option>
-              <option value="minimalBending">Prefer minimal bending / kneeling</option>
+              <option value="">Pick one…</option>
+              <option value="none">Nope, I’m good</option>
+              <option value="lowHeight">I’d rather not need a tall ladder</option>
+              <option value="minimalBending">I’d rather not kneel or bend a ton</option>
             </select>
             <FieldError message={errors.physicalAbility} />
           </section>
@@ -475,22 +505,31 @@ export function renderQuestionnaireStep(
             <FieldError message={errors.budget} />
           </section>
           <section className="space-y-3">
-            <h2 className="text-lg font-semibold text-[var(--foreground)]">Where will you source plants?</h2>
+            <h2 className="text-lg font-semibold text-[var(--foreground)]">Where will you probably get plants?</h2>
+            <p className="text-sm text-[var(--muted)]">Check every place you might use—more than one is fine.</p>
             <div className="grid gap-3">
               {(
                 [
                   {
                     id: "nativeNursery" as const,
-                    title: "Native plant nursery",
-                    hint: "Specialists with regional ecotypes.",
+                    title: "A native-plant nursery",
+                    hint: "People who really know local plants.",
                   },
-                  { id: "bigBox" as const, title: "Big box store", hint: "Convenient staples—verify tags." },
+                  {
+                    id: "bigBox" as const,
+                    title: "A big home-improvement store",
+                    hint: "Handy, but read the tags so it’s the right plant for here.",
+                  },
                   {
                     id: "propagate" as const,
-                    title: "Propagate / grow from seed",
-                    hint: "Patient, budget-friendly establishment.",
+                    title: "Growing my own (cuttings, seeds…)",
+                    hint: "Cheaper, just takes patience.",
                   },
-                  { id: "plantSwap" as const, title: "Community plant swap", hint: "Great for plugs and splits." },
+                  {
+                    id: "plantSwap" as const,
+                    title: "Swaps with neighbors or community events",
+                    hint: "Fun way to share little plants or divisions.",
+                  },
                 ] satisfies { id: SourcingOption; title: string; hint: string }[]
               ).map((s) => {
                 const checked = answers.sourcing.includes(s.id);
@@ -517,15 +556,19 @@ export function renderQuestionnaireStep(
     case 5:
       return (
         <div className="space-y-8">
+          <p className="text-sm font-medium text-[var(--accent-strong)]">Look & feel</p>
+          <p className="text-sm text-[var(--muted)]">
+            No wrong answers—just what you like. You can pick more than one vibe.
+          </p>
           <section className="space-y-3">
-            <h2 className="text-lg font-semibold text-[var(--foreground)]">Desired aesthetic</h2>
+            <h2 className="text-lg font-semibold text-[var(--foreground)]">What style feels good to you?</h2>
             <div className="grid gap-3 sm:grid-cols-2">
               {(
                 [
-                  { id: "naturalistic" as const, title: "Naturalistic / wild" },
-                  { id: "formal" as const, title: "Structured / formal" },
-                  { id: "cottage" as const, title: "Cottage garden" },
-                  { id: "minimalist" as const, title: "Minimalist / gravel garden" },
+                  { id: "naturalistic" as const, title: "Wild and natural (like a mini meadow)" },
+                  { id: "formal" as const, title: "Neat and tidy with clear shapes" },
+                  { id: "cottage" as const, title: "Cozy cottage garden—full and flowery" },
+                  { id: "minimalist" as const, title: "Simple and calm (lots of rocks or gravel is OK)" },
                 ] satisfies { id: AestheticOption; title: string }[]
               ).map((a) => {
                 const checked = answers.aesthetics.includes(a.id);
@@ -547,15 +590,15 @@ export function renderQuestionnaireStep(
             <FieldError message={errors.aesthetics} />
           </section>
           <section className="space-y-3">
-            <h2 className="text-lg font-semibold text-[var(--foreground)]">Color palette</h2>
+            <h2 className="text-lg font-semibold text-[var(--foreground)]">Favorite colors in the garden</h2>
             <div className="grid gap-3 sm:grid-cols-2">
               {(
                 [
-                  { id: "greens" as const, title: "Greens / foliage focus" },
-                  { id: "warm" as const, title: "Warm tones (reds / oranges)" },
-                  { id: "cool" as const, title: "Cool tones (blues / purples)" },
-                  { id: "neutral" as const, title: "White / neutral blooms" },
-                  { id: "noPreference" as const, title: "No strong preference" },
+                  { id: "greens" as const, title: "Mostly green leaves—flowers not the main event" },
+                  { id: "warm" as const, title: "Warm colors (reds, oranges, yellows)" },
+                  { id: "cool" as const, title: "Cool colors (blues, purples)" },
+                  { id: "neutral" as const, title: "White or soft, quiet flower colors" },
+                  { id: "noPreference" as const, title: "Whatever looks good—I’m not picky" },
                 ] satisfies { id: ColorPreference; title: string }[]
               ).map((c) => {
                 const checked = answers.colors.includes(c.id);
@@ -577,14 +620,14 @@ export function renderQuestionnaireStep(
             <FieldError message={errors.colors} />
           </section>
           <section className="space-y-3">
-            <h2 className="text-lg font-semibold text-[var(--foreground)]">Seasonal interest</h2>
+            <h2 className="text-lg font-semibold text-[var(--foreground)]">When should the yard look exciting?</h2>
             <div className="grid gap-3 sm:grid-cols-2">
               {(
                 [
-                  { id: "spring" as const, title: "Spring bloom" },
-                  { id: "summer" as const, title: "Summer color" },
-                  { id: "autumn" as const, title: "Autumn foliage" },
-                  { id: "winter" as const, title: "Winter structure" },
+                  { id: "spring" as const, title: "Spring—first flowers and fresh growth" },
+                  { id: "summer" as const, title: "Summer—lots of color" },
+                  { id: "autumn" as const, title: "Fall—leaf color and texture" },
+                  { id: "winter" as const, title: "Winter—interesting shapes even when bare" },
                 ] satisfies { id: SeasonalInterest; title: string }[]
               ).map((s) => {
                 const checked = answers.seasonal.includes(s.id);
@@ -611,27 +654,25 @@ export function renderQuestionnaireStep(
       return (
         <div className="space-y-8">
           <div className="rounded-xl border border-[var(--accent-soft)] bg-[var(--surface)] p-4 text-sm text-[var(--muted)]">
-            <p className="font-semibold text-[var(--foreground)]">What this step is for</p>
+            <p className="font-semibold text-[var(--foreground)]">Why we ask</p>
             <p className="mt-2">
-              We don’t want to suggest plants that fight what you already love. If you list keepers, we fold
-              them into the plan narrative. Anything you want gone becomes an urgent, first-step task in
-              Phase 0 of your action plan.
+              If you already have plants you love, we won’t act like the yard is empty—those go into your
+              plan story. If something needs to go (because it’s risky or you’re over it), we put that on a
+              “do this first” list before new planting.
             </p>
           </div>
           <section className="space-y-3">
-            <h2 className="text-lg font-semibold text-[var(--foreground)]">
-              What’s already in your landscape?
-            </h2>
+            <h2 className="text-lg font-semibold text-[var(--foreground)]">What’s out there already?</h2>
             <Toggle
               checked={answers.keepExisting}
               onChange={(v) => patch("keepExisting", v)}
-              label="There are plants I want to keep and work around"
-              description="Describe them so new picks complement—not duplicate—them."
+              label="There are plants I want to keep"
+              description="Tell us what they are so new plants play nice with them."
             />
             {answers.keepExisting ? (
               <div className="space-y-2">
                 <label className="text-sm font-medium text-[var(--foreground)]" htmlFor="keep-notes">
-                  What are you keeping?
+                  Which plants are stayers?
                 </label>
                 <textarea
                   id="keep-notes"
@@ -639,7 +680,7 @@ export function renderQuestionnaireStep(
                   value={answers.keepExistingNotes}
                   onChange={(e) => patch("keepExistingNotes", e.target.value)}
                   aria-invalid={Boolean(errors.keepExistingNotes)}
-                  placeholder="Examples: mature vine maple near patio, heirloom roses…"
+                  placeholder="Example: the maple by the porch, Grandma's rosebush..."
                 />
                 <FieldError message={errors.keepExistingNotes} />
               </div>
@@ -649,13 +690,13 @@ export function renderQuestionnaireStep(
             <Toggle
               checked={answers.removePlants}
               onChange={(v) => patch("removePlants", v)}
-              label="There are plants I plan to remove or replace soon"
-              description="These become Phase 0 checklist items so you tackle hazards before new planting."
+              label="There are plants I want to rip out or swap soon"
+              description="We’ll nudge you to handle these before you put new stuff in."
             />
             {answers.removePlants ? (
               <div className="space-y-2">
                 <label className="text-sm font-medium text-[var(--foreground)]" htmlFor="remove-notes">
-                  What should be removed or replaced?
+                  What’s on the remove/replace list?
                 </label>
                 <textarea
                   id="remove-notes"
@@ -663,7 +704,7 @@ export function renderQuestionnaireStep(
                   value={answers.removePlantsNotes}
                   onChange={(e) => patch("removePlantsNotes", e.target.value)}
                   aria-invalid={Boolean(errors.removePlantsNotes)}
-                  placeholder="Cedar hedge against siding, juniper under deck…"
+                  placeholder="Example: hedge scrunched against the house, spiky bush under the deck..."
                 />
                 <FieldError message={errors.removePlantsNotes} />
               </div>
@@ -694,9 +735,9 @@ export function renderQuestionnaireStep(
             <FieldError message={errors.fireRisk} />
           </section>
           <section className="space-y-3">
-            <h2 className="text-lg font-semibold text-[var(--foreground)]">Priorities (pick any that apply)</h2>
+            <h2 className="text-lg font-semibold text-[var(--foreground)]">What matters most to you? (pick any)</h2>
             <p className="text-sm text-[var(--muted)]">
-              We’ll balance these when ranking plants—fire performance still anchors safety.
+              We’ll juggle these when we sort plants—safety around fire still comes first in the math.
             </p>
             <div className="grid gap-3">
               {PRIORITY_CHOICES.map((p) => {
